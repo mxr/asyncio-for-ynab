@@ -1,0 +1,340 @@
+# asyncio_for_ynab.PayeesApi
+
+All URIs are relative to *https://api.ynab.com/v1*
+
+Method | HTTP request | Description
+------------- | ------------- | -------------
+[**create_payee**](PayeesApi.md#create_payee) | **POST** /plans/{plan_id}/payees | Create a payee
+[**get_payee_by_id**](PayeesApi.md#get_payee_by_id) | **GET** /plans/{plan_id}/payees/{payee_id} | Get a payee
+[**get_payees**](PayeesApi.md#get_payees) | **GET** /plans/{plan_id}/payees | Get all payees
+[**update_payee**](PayeesApi.md#update_payee) | **PATCH** /plans/{plan_id}/payees/{payee_id} | Update a payee
+
+
+# **create_payee**
+> SavePayeeResponse create_payee(plan_id, data)
+
+Create a payee
+
+Creates a new payee
+
+### Example
+
+* Bearer Authentication (bearer):
+
+```python
+import asyncio_for_ynab
+from asyncio_for_ynab.models.post_payee_wrapper import PostPayeeWrapper
+from asyncio_for_ynab.models.save_payee_response import SavePayeeResponse
+from asyncio_for_ynab.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://api.ynab.com/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = asyncio_for_ynab.Configuration(
+    host = "https://api.ynab.com/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure Bearer authorization: bearer
+configuration = asyncio_for_ynab.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+async with asyncio_for_ynab.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = asyncio_for_ynab.PayeesApi(api_client)
+    plan_id = 'plan_id_example' # str | The id of the plan. \"last-used\" can be used to specify the last used plan and \"default\" can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan).
+    data = asyncio_for_ynab.PostPayeeWrapper() # PostPayeeWrapper | The payee to create
+
+    try:
+        # Create a payee
+        api_response = await api_instance.create_payee(plan_id, data)
+        print("The response of PayeesApi->create_payee:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling PayeesApi->create_payee: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **plan_id** | **str**| The id of the plan. \&quot;last-used\&quot; can be used to specify the last used plan and \&quot;default\&quot; can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan). | 
+ **data** | [**PostPayeeWrapper**](PostPayeeWrapper.md)| The payee to create | 
+
+### Return type
+
+[**SavePayeeResponse**](SavePayeeResponse.md)
+
+### Authorization
+
+[bearer](../README.md#bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**201** | The payee was successfully created |  -  |
+**400** | The request could not be understood due to malformed syntax or validation error(s) |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **get_payee_by_id**
+> PayeeResponse get_payee_by_id(plan_id, payee_id)
+
+Get a payee
+
+Returns a single payee
+
+### Example
+
+* Bearer Authentication (bearer):
+
+```python
+import asyncio_for_ynab
+from asyncio_for_ynab.models.payee_response import PayeeResponse
+from asyncio_for_ynab.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://api.ynab.com/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = asyncio_for_ynab.Configuration(
+    host = "https://api.ynab.com/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure Bearer authorization: bearer
+configuration = asyncio_for_ynab.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+async with asyncio_for_ynab.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = asyncio_for_ynab.PayeesApi(api_client)
+    plan_id = 'plan_id_example' # str | The id of the plan. \"last-used\" can be used to specify the last used plan and \"default\" can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan).
+    payee_id = 'payee_id_example' # str | The id of the payee
+
+    try:
+        # Get a payee
+        api_response = await api_instance.get_payee_by_id(plan_id, payee_id)
+        print("The response of PayeesApi->get_payee_by_id:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling PayeesApi->get_payee_by_id: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **plan_id** | **str**| The id of the plan. \&quot;last-used\&quot; can be used to specify the last used plan and \&quot;default\&quot; can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan). | 
+ **payee_id** | **str**| The id of the payee | 
+
+### Return type
+
+[**PayeeResponse**](PayeeResponse.md)
+
+### Authorization
+
+[bearer](../README.md#bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The requested payee |  -  |
+**404** | The payee was not found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **get_payees**
+> PayeesResponse get_payees(plan_id, last_knowledge_of_server=last_knowledge_of_server)
+
+Get all payees
+
+Returns all payees
+
+### Example
+
+* Bearer Authentication (bearer):
+
+```python
+import asyncio_for_ynab
+from asyncio_for_ynab.models.payees_response import PayeesResponse
+from asyncio_for_ynab.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://api.ynab.com/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = asyncio_for_ynab.Configuration(
+    host = "https://api.ynab.com/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure Bearer authorization: bearer
+configuration = asyncio_for_ynab.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+async with asyncio_for_ynab.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = asyncio_for_ynab.PayeesApi(api_client)
+    plan_id = 'plan_id_example' # str | The id of the plan. \"last-used\" can be used to specify the last used plan and \"default\" can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan).
+    last_knowledge_of_server = 56 # int | The starting server knowledge.  If provided, only entities that have changed since `last_knowledge_of_server` will be included. (optional)
+
+    try:
+        # Get all payees
+        api_response = await api_instance.get_payees(plan_id, last_knowledge_of_server=last_knowledge_of_server)
+        print("The response of PayeesApi->get_payees:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling PayeesApi->get_payees: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **plan_id** | **str**| The id of the plan. \&quot;last-used\&quot; can be used to specify the last used plan and \&quot;default\&quot; can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan). | 
+ **last_knowledge_of_server** | **int**| The starting server knowledge.  If provided, only entities that have changed since &#x60;last_knowledge_of_server&#x60; will be included. | [optional] 
+
+### Return type
+
+[**PayeesResponse**](PayeesResponse.md)
+
+### Authorization
+
+[bearer](../README.md#bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The requested list of payees |  -  |
+**404** | No payees were found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **update_payee**
+> SavePayeeResponse update_payee(plan_id, payee_id, data)
+
+Update a payee
+
+Update a payee
+
+### Example
+
+* Bearer Authentication (bearer):
+
+```python
+import asyncio_for_ynab
+from asyncio_for_ynab.models.patch_payee_wrapper import PatchPayeeWrapper
+from asyncio_for_ynab.models.save_payee_response import SavePayeeResponse
+from asyncio_for_ynab.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to https://api.ynab.com/v1
+# See configuration.py for a list of all supported configuration parameters.
+configuration = asyncio_for_ynab.Configuration(
+    host = "https://api.ynab.com/v1"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure Bearer authorization: bearer
+configuration = asyncio_for_ynab.Configuration(
+    access_token = os.environ["BEARER_TOKEN"]
+)
+
+# Enter a context with an instance of the API client
+async with asyncio_for_ynab.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = asyncio_for_ynab.PayeesApi(api_client)
+    plan_id = 'plan_id_example' # str | The id of the plan. \"last-used\" can be used to specify the last used plan and \"default\" can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan).
+    payee_id = 'payee_id_example' # str | The id of the payee
+    data = asyncio_for_ynab.PatchPayeeWrapper() # PatchPayeeWrapper | The payee to update
+
+    try:
+        # Update a payee
+        api_response = await api_instance.update_payee(plan_id, payee_id, data)
+        print("The response of PayeesApi->update_payee:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling PayeesApi->update_payee: %s\n" % e)
+```
+
+
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **plan_id** | **str**| The id of the plan. \&quot;last-used\&quot; can be used to specify the last used plan and \&quot;default\&quot; can be used if default plan selection is enabled (see: https://api.ynab.com/#oauth-default-plan). | 
+ **payee_id** | **str**| The id of the payee | 
+ **data** | [**PatchPayeeWrapper**](PatchPayeeWrapper.md)| The payee to update | 
+
+### Return type
+
+[**SavePayeeResponse**](SavePayeeResponse.md)
+
+### Authorization
+
+[bearer](../README.md#bearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+### HTTP response details
+
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | The payee was successfully updated |  -  |
+**400** | The request could not be understood due to malformed syntax or validation error(s) |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+

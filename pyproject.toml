@@ -1,0 +1,30 @@
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+# TODO migrate to 'disallow_untyped_defs'
+[[tool.mypy.overrides]]
+ignore_errors = true
+module = ["asyncio_for_ynab.*", "test.*", "test_custom.*"]
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 150
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",  # see pyupgrade
+  "B",  # see flake8-bugbear
+  "A",  # see flake8-builtins
+  "C4",  # see flake8-comprehension
+  "SIM",  # see flake8-simplify
+  "TC",  # see flake8-type-checking
+]

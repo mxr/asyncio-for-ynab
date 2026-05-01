@@ -1,0 +1,65 @@
+name: Update
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: 5 0 * * *     # every day at 00:05 UTC
+
+permissions: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6.0.2
+      with:
+        persist-credentials: false
+
+    - name: Download upstream spec
+      id: download
+      run: |
+        tmp="$(mktemp)"
+        trap 'rm -f "$tmp"' EXIT
+
+        curl --fail --location --silent --show-error "https://api.ynab.com/papi/open_api_spec.yaml" --output "$tmp"
+
+        if cmp -s config/spec.yaml "$tmp"; then
+          echo "YNAB spec is already current."
+          echo "CHANGED=false" >> "$GITHUB_ENV"
+          exit 0
+        fi
+
+        mv "$tmp" config/spec.yaml
+        trap - EXIT
+        echo "CHANGED=true" >> "$GITHUB_ENV"
+
+    - name: Sync generator version
+      if: env.CHANGED == 'true'
+      run: |
+        version="$(sed -n 's/^  version: //p' config/spec.yaml | head -n 1)"
+
+        if [ -z "$version" ]; then
+          echo "could not read info.version from config/spec.yaml" >&2
+          exit 1
+        fi
+
+        tmp="$(mktemp)"
+        trap 'rm -f "$tmp"' EXIT
+        sed "s/^packageVersion: .*/packageVersion: $version/" config/openapi.yaml > "$tmp"
+        mv "$tmp" config/openapi.yaml
+        trap - EXIT
+        echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
+
+    - name: Create pull request
+      if: env.CHANGED == 'true'
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1   # v8.1.1
+      env:
+        SPEC_VERSION: ${{ env.SPEC_VERSION }}
+      with:
+        branch: update-ynab-spec
+        title: Update YNAB API spec to v${{ env.SPEC_VERSION }}
+        commit-message: Update YNAB API spec to v${{ env.SPEC_VERSION }}
+        draft: true
