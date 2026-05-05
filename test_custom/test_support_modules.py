@@ -509,6 +509,19 @@ async def test_rest_client_request_uses_defaults_and_creates_pool(configuration:
 
 
 @pytest.mark.asyncio
+async def test_rest_client_request_sends_json_post_params(configuration: Configuration) -> None:
+    client = rest.RESTClientObject(configuration)
+    pool = Mock()
+    pool.request = AsyncMock(return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example")))
+    client.pool_manager = pool
+    response = await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"}, post_params=[("a", "b")])
+    assert response.status == 200
+    pool.request.assert_awaited_once_with(
+        method="POST", url="https://api.example", timeout=300, headers={"Content-Type": "application/json"}, json={"a": "b"}
+    )
+
+
+@pytest.mark.asyncio
 async def test_rest_client_request_handles_form_multipart_and_raw_body(configuration: Configuration) -> None:
     client = rest.RESTClientObject(configuration)
     pool = Mock()
