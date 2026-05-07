@@ -7,8 +7,10 @@ import importlib
 import inspect
 import pkgutil
 from collections.abc import Awaitable
+from importlib.machinery import PathFinder
 from typing import Annotated
 from typing import Any
+from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
@@ -26,8 +28,8 @@ class EmptyModel(BaseModel):
 
 
 @patch("test_custom.pkgutil.iter_modules", autospec=True)
-def test_iter_helpers_skip_private_modules(iter_modules) -> None:
-    iter_modules.return_value = [pkgutil.ModuleInfo(None, "_private", False)]
+def test_iter_helpers_skip_private_modules(iter_modules: Mock) -> None:
+    iter_modules.return_value = [pkgutil.ModuleInfo(PathFinder, "_private", False)]
     assert conftest.iter_model_classes() == []
     assert conftest.iter_enum_classes() == []
     assert conftest.iter_api_classes() == []
@@ -44,7 +46,7 @@ def test_annotation_helpers_cover_edge_types() -> None:
 
 @patch("test_custom.get_args", autospec=True, return_value=(type(None),))
 @patch("test_custom.get_origin", autospec=True, return_value=conftest.Union)
-def test_unwrap_annotation_handles_empty_optional_union(get_origin, get_args) -> None:
+def test_unwrap_annotation_handles_empty_optional_union(get_origin: Any, get_args: Any) -> None:
     assert conftest._unwrap_annotation(object) is None
 
 
@@ -70,10 +72,14 @@ def _iter_generated_test_classes() -> list[type[Any]]:
 
 
 @pytest.mark.asyncio
-async def test_generated_unittest_stubs_execute_make_instance_methods() -> None:
-    for test_class in _iter_generated_test_classes():
-        instance = test_class()
-        instance.setUp()
+@pytest.mark.parametrize(
+    "test_class",
+    [pytest.param(test_class, id=test_class.__name__) for test_class in _iter_generated_test_classes()],
+)
+async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[Any]) -> None:
+    instance = test_class()
+    instance.setUp()
+    try:
         if hasattr(instance, "make_instance"):
             assert instance.make_instance(include_optional=False) is None
             assert instance.make_instance(include_optional=True) is None
@@ -82,4 +88,5 @@ async def test_generated_unittest_stubs_execute_make_instance_methods() -> None:
                 result = getattr(instance, name)()
                 if isinstance(result, Awaitable):
                     await result
+    finally:
         instance.tearDown()

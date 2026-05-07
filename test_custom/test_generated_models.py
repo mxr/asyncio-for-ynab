@@ -14,7 +14,11 @@ from test_custom import model_payload
 from test_custom import value_for_annotation
 
 if TYPE_CHECKING:
-    from enum import Enum
+    from typing import Protocol
+
+    class EnumWithFromJson(Protocol):
+        @classmethod
+        def from_json(cls, data: str) -> object: ...
 
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
@@ -62,6 +66,6 @@ def test_generated_model_validators_reject_invalid_enums(model_class: type[BaseM
 
 
 @pytest.mark.parametrize("enum_class", iter_enum_classes(), ids=lambda cls: cls.__name__)
-def test_generated_model_enum_json_helpers(enum_class: type[Enum]) -> None:
+def test_generated_model_enum_json_helpers(enum_class: type[EnumWithFromJson]) -> None:
     value = value_for_annotation(enum_class)
     assert enum_class.from_json(json.dumps(value.value)) == value

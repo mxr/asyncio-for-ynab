@@ -50,7 +50,7 @@ class FakeApiClient:
 
 def _method_arguments(method: Any, *, include_optional: bool = True, include_private: bool = False) -> dict[str, Any]:
     signature = inspect.signature(method)
-    arguments = {}
+    arguments: dict[str, Any] = {}
     for name, parameter in signature.parameters.items():
         if not include_private and name.startswith("_"):
             continue
