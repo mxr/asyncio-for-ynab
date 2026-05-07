@@ -12,6 +12,7 @@ from typing import Annotated
 from typing import Any
 from typing import get_args
 from typing import get_origin
+from typing import Protocol
 from typing import Union
 
 from pydantic import BaseModel
@@ -21,6 +22,10 @@ import asyncio_for_ynab.models
 
 
 TEST_UUID = "00000000-0000-0000-0000-000000000001"
+
+
+class GeneratedApiClass(Protocol):
+    def __init__(self, api_client: object | None = None) -> None: ...
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
@@ -47,8 +52,8 @@ def iter_enum_classes() -> list[type[enum.Enum]]:
     return sorted(classes, key=lambda cls: cls.__name__)
 
 
-def iter_api_classes() -> list[type[Any]]:
-    classes: list[type[Any]] = []
+def iter_api_classes() -> list[type[GeneratedApiClass]]:
+    classes: list[type[GeneratedApiClass]] = []
     for module_info in pkgutil.iter_modules(asyncio_for_ynab.api.__path__):
         if module_info.name.startswith("_"):
             continue

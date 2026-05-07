@@ -6,10 +6,10 @@ import enum
 import importlib
 import inspect
 import pkgutil
+import unittest
 from collections.abc import Awaitable
 from importlib.machinery import PathFinder
 from typing import Annotated
-from typing import Any
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -46,7 +46,7 @@ def test_annotation_helpers_cover_edge_types() -> None:
 
 @patch("test_custom.get_args", autospec=True, return_value=(type(None),))
 @patch("test_custom.get_origin", autospec=True, return_value=conftest.Union)
-def test_unwrap_annotation_handles_empty_optional_union(get_origin: Any, get_args: Any) -> None:
+def test_unwrap_annotation_handles_empty_optional_union(get_origin, get_args):
     assert conftest._unwrap_annotation(object) is None
 
 
@@ -63,11 +63,13 @@ def test_field_and_parameter_helpers_cover_named_overrides() -> None:
     assert conftest.value_for_parameter("amount", int) == 1
 
 
-def _iter_generated_test_classes() -> list[type[Any]]:
-    test_classes: list[type[Any]] = []
+def _iter_generated_test_classes() -> list[type[unittest.TestCase]]:
+    test_classes: list[type[unittest.TestCase]] = []
     for module_info in pkgutil.iter_modules(importlib.import_module("test").__path__):
         module = importlib.import_module(f"test.{module_info.name}")
-        test_classes.extend(obj for _, obj in inspect.getmembers(module, inspect.isclass) if obj.__module__ == module.__name__)
+        test_classes.extend(
+            obj for _, obj in inspect.getmembers(module, inspect.isclass) if issubclass(obj, unittest.TestCase) and obj.__module__ == module.__name__
+        )
     return test_classes
 
 
@@ -76,7 +78,7 @@ def _iter_generated_test_classes() -> list[type[Any]]:
     "test_class",
     [pytest.param(test_class, id=test_class.__name__) for test_class in _iter_generated_test_classes()],
 )
-async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[Any], subtests: pytest.Subtests) -> None:
+async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[unittest.TestCase], subtests: pytest.Subtests) -> None:
     instance = test_class()
     instance.setUp()
     try:
