@@ -23,7 +23,19 @@ repos:
   - id: openapi-generator-cli
     alias: openapi-generate
     name: generate async YNAB SDK
-    args: [generate, -i, config/spec.yaml, -g, python, -c, config/openapi.yaml, -t, templates/python, -o, ., --minimal-update]
+    args:
+    - generate
+    - -i
+    - config/spec.yaml
+    - -g
+    - python
+    - -c
+    - config/openapi.yaml
+    - -t
+    - templates/python
+    - -o
+    - .
+    - --minimal-update
     pass_filenames: false
     files: |
       (?x)^(
@@ -45,7 +57,7 @@ repos:
   - id: pretty-format-toml
     args: [--autofix, --trailing-commas]
   - id: pretty-format-yaml
-    args: [--autofix]
+    args: [--autofix, --line-width=120]
     exclude: config/spec.yaml
 - repo: https://github.com/asottile/setup-cfg-fmt
   rev: v3.2.0
