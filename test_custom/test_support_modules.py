@@ -7,7 +7,6 @@ import uuid
 from enum import Enum
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -18,6 +17,7 @@ from pydantic import SecretStr
 from asyncio_for_ynab import rest
 from asyncio_for_ynab.api_client import ApiClient
 from asyncio_for_ynab.configuration import Configuration
+from asyncio_for_ynab.configuration import HostSetting
 from asyncio_for_ynab.exceptions import ApiAttributeError
 from asyncio_for_ynab.exceptions import ApiException
 from asyncio_for_ynab.exceptions import ApiKeyError
@@ -54,7 +54,7 @@ class ObjectWithListDict:
 @pytest.fixture
 def configuration(tmp_path: Path) -> Configuration:
     config = Configuration(host="https://api.example", access_token="token")
-    config.temp_folder_path = str(tmp_path)
+    object.__setattr__(config, "temp_folder_path", str(tmp_path))
     return config
 
 
@@ -73,13 +73,13 @@ def http_response(status: int = 200, content: bytes = b"{}", headers: dict[str, 
 @pytest.mark.asyncio
 async def test_api_client_defaults_headers_and_context_manager(configuration: Configuration) -> None:
     client = ApiClient(configuration=configuration, header_name="X-Token", header_value="value", cookie="cookie=value")
-    client.rest_client.close = AsyncMock()
-    assert client.user_agent == "OpenAPI-Generator/1.83.0/python"
-    client.user_agent = "custom-agent"
-    client.set_default_header("X-Other", "other")
-    async with client as entered:
-        assert entered is client
-    client.rest_client.close.assert_awaited_once()
+    with patch.object(client.rest_client, "close", autospec=True) as close:
+        assert client.user_agent == "OpenAPI-Generator/1.83.0/python"
+        client.user_agent = "custom-agent"
+        client.set_default_header("X-Other", "other")
+        async with client as entered:
+            assert entered is client
+        close.assert_awaited_once()
     assert client.default_headers["X-Token"] == "value"
     assert client.default_headers["X-Other"] == "other"
 
@@ -180,12 +180,11 @@ def test_parameters_to_url_query_collection_formats(api_client: ApiClient, colle
 def test_files_parameters_accept_supported_shapes(api_client: ApiClient, tmp_path: Path) -> None:
     upload = tmp_path / "upload.txt"
     upload.write_text("hello")
-    params = api_client.files_parameters(
-        {"path": str(upload), "bytes": b"bytes", "tuple": ("name.txt", b"tuple"), "list": [b"one", ("two.txt", b"two")]}
-    )
+    files_parameters = object.__getattribute__(api_client, "files_parameters")
+    params = files_parameters({"path": str(upload), "bytes": b"bytes", "tuple": ("name.txt", b"tuple"), "list": [b"one", ("two.txt", b"two")]})
     assert [name for name, _ in params] == ["path", "bytes", "tuple", "list", "list"]
     with pytest.raises(ValueError, match="Unsupported file value"):
-        api_client.files_parameters({"bad": object()})
+        files_parameters({"bad": object()})
 
 
 def test_header_selection(api_client: ApiClient) -> None:
@@ -239,10 +238,12 @@ def test_sanitize_for_serialization_handles_supported_values(api_client: ApiClie
 @pytest.mark.asyncio
 async def test_call_api_delegates_and_reraises(api_client: ApiClient) -> None:
     response = http_response()
-    api_client.rest_client.request = AsyncMock(return_value=response)
-    assert await api_client.call_api("GET", "https://api.example", header_params={"Accept": "application/json"}) is response
-    api_client.rest_client.request = AsyncMock(side_effect=ApiException(status=500, reason="boom"))
-    with pytest.raises(ApiException):
+    with patch.object(api_client.rest_client, "request", autospec=True, return_value=response):
+        assert await api_client.call_api("GET", "https://api.example", header_params={"Accept": "application/json"}) is response
+    with (
+        patch.object(api_client.rest_client, "request", autospec=True, side_effect=ApiException(status=500, reason="boom")),
+        pytest.raises(ApiException),
+    ):
         await api_client.call_api("GET", "https://api.example")
 
 
@@ -340,23 +341,25 @@ def test_deserialize_supported_types(api_client: ApiClient) -> None:
 
 
 def test_deserialize_private_edge_cases(api_client: ApiClient) -> None:
-    assert api_client._ApiClient__deserialize(None, "str") is None
-    assert api_client._ApiClient__deserialize("1", int) == 1
-    assert api_client._ApiClient__deserialize({"a": 1}, object) == {"a": 1}
-    assert api_client._ApiClient__deserialize("2024-01-02", dt.date) == dt.date(2024, 1, 2)
-    assert api_client._ApiClient__deserialize("2024-01-02T03:04:05+00:00", dt.datetime).year == 2024
-    assert api_client._ApiClient__deserialize("1.5", decimal.Decimal) == decimal.Decimal("1.5")
-    assert api_client._ApiClient__deserialize("00000000-0000-0000-0000-000000000001", uuid.UUID) == uuid.UUID("00000000-0000-0000-0000-000000000001")
-    assert api_client._ApiClient__deserialize("checking", AccountType) == AccountType.CHECKING
-    assert api_client._ApiClient__deserialize_primitive(object(), int)
+    deserialize = object.__getattribute__(api_client, "_ApiClient__deserialize")
+    deserialize_primitive = object.__getattribute__(api_client, "_ApiClient__deserialize_primitive")
+    assert deserialize(None, "str") is None
+    assert deserialize("1", int) == 1
+    assert deserialize({"a": 1}, object) == {"a": 1}
+    assert deserialize("2024-01-02", dt.date) == dt.date(2024, 1, 2)
+    assert deserialize("2024-01-02T03:04:05+00:00", dt.datetime).year == 2024
+    assert deserialize("1.5", decimal.Decimal) == decimal.Decimal("1.5")
+    assert deserialize("00000000-0000-0000-0000-000000000001", uuid.UUID) == uuid.UUID("00000000-0000-0000-0000-000000000001")
+    assert deserialize("checking", AccountType) == AccountType.CHECKING
+    assert deserialize_primitive(object(), int)
     unicode_failure = Mock(side_effect=UnicodeEncodeError("utf-8", "x", 0, 1, "bad"))
-    assert api_client._ApiClient__deserialize_primitive("x", unicode_failure) == "x"
+    assert deserialize_primitive("x", unicode_failure) == "x"
 
 
 @patch("asyncio_for_ynab.api_client.parse", autospec=True, side_effect=ImportError)
 def test_deserialize_date_and_datetime_import_error(parse: Mock, api_client: ApiClient) -> None:
-    assert api_client._ApiClient__deserialize_date("bad") == "bad"
-    assert api_client._ApiClient__deserialize_datetime("bad") == "bad"
+    assert object.__getattribute__(api_client, "_ApiClient__deserialize_date")("bad") == "bad"
+    assert object.__getattribute__(api_client, "_ApiClient__deserialize_datetime")("bad") == "bad"
 
 
 def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
@@ -369,11 +372,16 @@ def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
             password="pass",
             access_token="access",
         )
-        config.refresh_api_key_hook = Mock()
+        refreshed_configs: list[Configuration] = []
+
+        def refresh_api_key_hook(refreshed_config: Configuration) -> None:
+            refreshed_configs.append(refreshed_config)
+
+        object.__setattr__(config, "refresh_api_key_hook", refresh_api_key_hook)
         assert config.get_api_key_with_prefix("bearer") == "Bearer key"
         assert config.get_api_key_with_prefix("missing", "alias") == "alias-key"
         assert config.get_api_key_with_prefix("none") is None
-        assert config.refresh_api_key_hook.call_count == 3
+        assert refreshed_configs == [config, config, config]
         assert config.get_basic_auth_token() == "Basic dXNlcjpwYXNz"
         assert config.auth_settings()["bearer"]["value"] == "Bearer access"
         assert "Python SDK Debug Report" in config.to_debug_report()
@@ -404,13 +412,13 @@ def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
 
 def test_configuration_host_settings_validation() -> None:
     config = Configuration()
-    servers = [
+    servers: list[HostSetting] = [
         {
             "url": "https://{env}.example/{version}",
             "description": "test",
             "variables": {
                 "env": {"default_value": "dev", "enum_values": ["dev", "prod"], "description": ""},
-                "version": {"default_value": "v1", "description": ""},
+                "version": {"default_value": "v1", "enum_values": [], "description": ""},
             },
         }
     ]
@@ -433,7 +441,7 @@ def test_configuration_host_settings_validation() -> None:
     ],
 )
 def test_path_aware_exceptions(exception_class: type[Exception], args: dict[str, Any]) -> None:
-    exception = exception_class("bad", path_to_item=["data", 0, "name"], **args)
+    exception = exception_class("bad", **{"path_to_item": ["data", 0, "name"], **args})
     assert "['data'][0]['name']" in str(exception)
     assert "bad" in str(exception_class("bad", **args))
     assert render_path(["data", 0]) == "['data'][0]"
@@ -487,60 +495,77 @@ async def test_rest_response_reads_once() -> None:
 @pytest.mark.parametrize("method", ["GET", "HEAD", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"])
 async def test_rest_client_request_builds_supported_methods(configuration: Configuration, method: str) -> None:
     client = rest.RESTClientObject(configuration)
-    pool = Mock()
-    pool.request = AsyncMock(return_value=httpx.Response(200, content=b"{}", request=httpx.Request(method, "https://api.example")))
+    pool = httpx.AsyncClient()
     client.pool_manager = pool
     headers = {"Content-Type": "application/json"}
-    response = await client.request(method, "https://api.example", headers=headers, body={"ok": True}, _request_timeout=1)
-    assert response.status == 200
-    pool.request.assert_awaited_once()
+    with patch.object(
+        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request(method, "https://api.example"))
+    ) as request:
+        response = await client.request(method, "https://api.example", headers=headers, body={"ok": True}, _request_timeout=1)
+        assert response.status == 200
+        request.assert_awaited_once()
+    await pool.aclose()
 
 
 @pytest.mark.asyncio
 async def test_rest_client_request_uses_defaults_and_creates_pool(configuration: Configuration) -> None:
     client = rest.RESTClientObject(configuration)
-    pool = Mock()
-    pool.request = AsyncMock(return_value=httpx.Response(200, content=b"{}", request=httpx.Request("GET", "https://api.example")))
-    client._create_pool_manager = Mock(return_value=pool)
-    response = await client.request("GET", "https://api.example")
-    assert response.status == 200
-    client._create_pool_manager.assert_called_once()
-    pool.request.assert_awaited_once()
+    pool = httpx.AsyncClient()
+    with (
+        patch.object(rest.RESTClientObject, "_create_pool_manager", autospec=True, return_value=pool) as create_pool_manager,
+        patch.object(
+            pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("GET", "https://api.example"))
+        ) as request,
+    ):
+        response = await client.request("GET", "https://api.example")
+        assert response.status == 200
+        create_pool_manager.assert_called_once_with(client)
+        request.assert_awaited_once()
+    await pool.aclose()
 
 
 @pytest.mark.asyncio
 async def test_rest_client_request_sends_json_post_params(configuration: Configuration) -> None:
     client = rest.RESTClientObject(configuration)
-    pool = Mock()
-    pool.request = AsyncMock(return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example")))
+    pool = httpx.AsyncClient()
     client.pool_manager = pool
-    response = await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"}, post_params=[("a", "b")])
-    assert response.status == 200
-    pool.request.assert_awaited_once_with(
-        method="POST", url="https://api.example", timeout=300, headers={"Content-Type": "application/json"}, json={"a": "b"}
-    )
+    with patch.object(
+        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example"))
+    ) as request:
+        response = await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"}, post_params=[("a", "b")])
+        assert response.status == 200
+        request.assert_awaited_once_with(
+            method="POST", url="https://api.example", timeout=300, headers={"Content-Type": "application/json"}, json={"a": "b"}
+        )
+    await pool.aclose()
 
 
 @pytest.mark.asyncio
 async def test_rest_client_request_handles_form_multipart_and_raw_body(configuration: Configuration) -> None:
     client = rest.RESTClientObject(configuration)
-    pool = Mock()
-    pool.request = AsyncMock(return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example")))
+    pool = httpx.AsyncClient()
     client.pool_manager = pool
-    await client.request("POST", "https://api.example", headers={"Content-Type": "application/x-www-form-urlencoded"}, post_params=[("a", "b")])
-    await client.request(
-        "POST",
-        "https://api.example",
-        headers={"Content-Type": "multipart/form-data"},
-        post_params=[("file", ("name.txt", b"data", "text/plain")), ("meta", {"a": 1}), ("count", 2), ("plain", "text")],
-    )
-    await client.request("POST", "https://api.example", headers={"Content-Type": "multipart/form-data"}, post_params=[("plain", "text")])
-    await client.request(
-        "POST", "https://api.example", headers={"Content-Type": "multipart/form-data"}, post_params=[("file", ("name.txt", b"data", "text/plain"))]
-    )
-    await client.request("POST", "https://api.example", headers={"Content-Type": "text/plain"}, body="raw")
-    await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"})
-    assert pool.request.await_count == 6
+    with patch.object(
+        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example"))
+    ) as request:
+        await client.request("POST", "https://api.example", headers={"Content-Type": "application/x-www-form-urlencoded"}, post_params=[("a", "b")])
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "multipart/form-data"},
+            post_params=[("file", ("name.txt", b"data", "text/plain")), ("meta", {"a": 1}), ("count", 2), ("plain", "text")],
+        )
+        await client.request("POST", "https://api.example", headers={"Content-Type": "multipart/form-data"}, post_params=[("plain", "text")])
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "multipart/form-data"},
+            post_params=[("file", ("name.txt", b"data", "text/plain"))],
+        )
+        await client.request("POST", "https://api.example", headers={"Content-Type": "text/plain"}, body="raw")
+        await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"})
+        assert request.await_count == 6
+    await pool.aclose()
 
 
 @pytest.mark.asyncio
@@ -557,10 +582,11 @@ async def test_rest_client_request_rejects_invalid_inputs(configuration: Configu
 @pytest.mark.asyncio
 async def test_rest_client_closes_pool(configuration: Configuration) -> None:
     client = rest.RESTClientObject(configuration)
-    client.pool_manager = Mock()
-    client.pool_manager.aclose = AsyncMock()
-    await client.close()
-    client.pool_manager.aclose.assert_awaited_once()
+    pool = httpx.AsyncClient()
+    client.pool_manager = pool
+    with patch.object(pool, "aclose", autospec=True) as aclose:
+        await client.close()
+        aclose.assert_awaited_once()
 
 
 @patch("asyncio_for_ynab.rest.httpx.AsyncClient", autospec=True)
