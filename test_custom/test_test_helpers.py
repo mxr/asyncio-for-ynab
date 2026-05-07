@@ -76,7 +76,7 @@ def _iter_generated_test_classes() -> list[type[Any]]:
     "test_class",
     [pytest.param(test_class, id=test_class.__name__) for test_class in _iter_generated_test_classes()],
 )
-async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[Any]) -> None:
+async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[Any], subtests: pytest.Subtests) -> None:
     instance = test_class()
     instance.setUp()
     try:
@@ -85,8 +85,9 @@ async def test_generated_unittest_stubs_execute_make_instance_methods(test_class
             assert instance.make_instance(include_optional=True) is None
         for name in dir(instance):
             if name.startswith("test"):
-                result = getattr(instance, name)()
-                if isinstance(result, Awaitable):
-                    await result
+                with subtests.test(test_class=test_class.__name__, method=name):
+                    result = getattr(instance, name)()
+                    if isinstance(result, Awaitable):
+                        await result
     finally:
         instance.tearDown()

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
-def test_generated_model_serialization_helpers(model_class: type[BaseModel]) -> None:
+def test_generated_model_serialization_helpers(model_class: type[BaseModel], subtests: pytest.Subtests) -> None:
     payload = model_payload(model_class)
 
     model = model_class.from_dict(payload)
@@ -48,21 +48,23 @@ def test_generated_model_serialization_helpers(model_class: type[BaseModel]) -> 
     for name, field in model_class.model_fields.items():
         field_value = value_for_annotation(field.annotation)
         if isinstance(field_value, list):
-            list_model = model_class.model_construct(**dict.fromkeys(model_class.model_fields))
-            list_model.__dict__[name] = [None]
-            assert list_model.to_dict() is not None
+            with subtests.test("list field", model=model_class.__name__, field=name):
+                list_model = model_class.model_construct(**dict.fromkeys(model_class.model_fields))
+                list_model.__dict__[name] = [None]
+                assert list_model.to_dict() is not None
 
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
-def test_generated_model_validators_reject_invalid_enums(model_class: type[BaseModel]) -> None:
+def test_generated_model_validators_reject_invalid_enums(model_class: type[BaseModel], subtests: pytest.Subtests) -> None:
     payload = model_payload(model_class)
     invalid_field_names = {"debt_transaction_type", "frequency", "goal_type", "type"}
     for name, field in model_class.model_fields.items():
         if name in invalid_field_names and not hasattr(field.annotation, "__members__"):
-            invalid_payload = payload.copy()
-            invalid_payload[field.alias or name] = "invalid"
-            with pytest.raises(ValidationError):
-                model_class.from_dict(invalid_payload)
+            with subtests.test(model=model_class.__name__, field=name):
+                invalid_payload = payload.copy()
+                invalid_payload[field.alias or name] = "invalid"
+                with pytest.raises(ValidationError):
+                    model_class.from_dict(invalid_payload)
 
 
 @pytest.mark.parametrize("enum_class", iter_enum_classes(), ids=lambda cls: cls.__name__)

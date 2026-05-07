@@ -71,17 +71,20 @@ def _method_arguments(method: Any, *, include_optional: bool = True, include_pri
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-async def test_generated_api_methods_serialize_and_call(api_class: type[Any]) -> None:
+async def test_generated_api_methods_serialize_and_call(api_class: type[Any], subtests: pytest.Subtests) -> None:
     api = api_class(FakeApiClient())
     methods = [method for name, method in inspect.getmembers(api, inspect.ismethod) if not name.startswith("_")]
 
     for method in methods:
-        result = await method(**_method_arguments(method))
-        assert result
-        result = await method(**_method_arguments(method, include_optional=False))
-        assert result
-        result = await method(**_method_arguments(method, include_private=True))
-        assert result
+        with subtests.test("all arguments", api=api_class.__name__, method=method.__name__):
+            result = await method(**_method_arguments(method))
+            assert result
+        with subtests.test("required arguments", api=api_class.__name__, method=method.__name__):
+            result = await method(**_method_arguments(method, include_optional=False))
+            assert result
+        with subtests.test("private arguments", api=api_class.__name__, method=method.__name__):
+            result = await method(**_method_arguments(method, include_private=True))
+            assert result
 
     if api_class.__name__ == "TransactionsApi":
         serializers = [
@@ -90,31 +93,34 @@ async def test_generated_api_methods_serialize_and_call(api_class: type[Any]) ->
             if name.startswith("_get_transactions") and name.endswith("_serialize")
         ]
         for serializer in serializers:
-            arguments = _method_arguments(serializer, include_private=True)
-            if "since_date" in arguments:  # pragma: no branch
-                arguments["since_date"] = "not-a-date"
-            serializer(**arguments)
+            with subtests.test("invalid since_date", api=api_class.__name__, serializer=serializer.__name__):
+                arguments = _method_arguments(serializer, include_private=True)
+                if "since_date" in arguments:  # pragma: no branch
+                    arguments["since_date"] = "not-a-date"
+                serializer(**arguments)
 
 
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-def test_generated_api_serializers_handle_absent_default_content_type(api_class: type[Any]) -> None:
+def test_generated_api_serializers_handle_absent_default_content_type(api_class: type[Any], subtests: pytest.Subtests) -> None:
     api = api_class(FakeApiClient(default_content_type=None))
     serializers = [method for name, method in inspect.getmembers(api, inspect.ismethod) if name.endswith("_serialize")]
 
     for serializer in serializers:
-        arguments = _method_arguments(serializer, include_optional=False, include_private=True)
-        arguments["_content_type"] = None
-        serializer(**arguments)
+        with subtests.test(api=api_class.__name__, serializer=serializer.__name__):
+            arguments = _method_arguments(serializer, include_optional=False, include_private=True)
+            arguments["_content_type"] = None
+            serializer(**arguments)
 
 
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-def test_generated_api_serializers_handle_absent_params(api_class: type[Any]) -> None:
+def test_generated_api_serializers_handle_absent_params(api_class: type[Any], subtests: pytest.Subtests) -> None:
     api = api_class(FakeApiClient())
     serializers = [method for name, method in inspect.getmembers(api, inspect.ismethod) if name.endswith("_serialize")]
 
     for serializer in serializers:
-        arguments = _method_arguments(serializer, include_private=True)
-        for name in inspect.signature(serializer).parameters:
-            if not name.startswith("_"):
-                arguments[name] = None
-        serializer(**arguments)
+        with subtests.test(api=api_class.__name__, serializer=serializer.__name__):
+            arguments = _method_arguments(serializer, include_private=True)
+            for name in inspect.signature(serializer).parameters:
+                if not name.startswith("_"):
+                    arguments[name] = None
+            serializer(**arguments)
