@@ -68,3 +68,8 @@ repos:
   hooks:
   - id: mypy
     language_version: python3.10
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  rev: v1.24.1
+  hooks:
+  - id: zizmor
+    args: [--no-progress, --fix]
