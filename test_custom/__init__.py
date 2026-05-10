@@ -32,29 +32,29 @@ class GeneratedApiClass(Protocol):
     def __init__(self, api_client: object | None = None) -> None: ...
 
 
-def _iter_generated_classes(package: types.ModuleType, matcher: Callable[[str, type[object], str], bool]) -> list[type[Any]]:
+def _iter_generated_classes(package: types.ModuleType, matcher: Callable[[type[object], str], bool]) -> list[type[Any]]:
     classes: list[type[BaseModel]] = []
     for module_info in pkgutil.iter_modules(asyncio_for_ynab.models.__path__):
         if not module_info.name.startswith("_"):
             for _, obj in inspect.getmembers(
                 module := importlib.import_module(f"{asyncio_for_ynab.models.__name__}.{module_info.name}"), inspect.isclass
             ):
-                if matcher(obj.__name__, obj, module.__name__):
+                if matcher(obj, module.__name__):
                     classes.append(obj)
 
     return sorted(classes, key=lambda cls: cls.__name__)
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda _, obj, module_name: issubclass(obj, BaseModel) and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj, module_name: issubclass(obj, BaseModel) and obj.__module__ == module_name)
 
 
 def iter_enum_classes() -> list[type[enum.Enum]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda _, obj, module_name: issubclass(obj, enum.Enum) and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj, module_name: issubclass(obj, enum.Enum) and obj.__module__ == module_name)
 
 
 def iter_api_classes() -> list[type[GeneratedApiClass]]:
-    return _iter_generated_classes(asyncio_for_ynab.api, lambda name, obj, module_name: name.endswith("Api") and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj, module_name: obj.__name__.endswith("Api") and obj.__module__ == module_name)
 
 
 def _unwrap_annotation(annotation: Any) -> Any:
