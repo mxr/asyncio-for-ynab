@@ -32,14 +32,13 @@ class GeneratedApiClass(Protocol):
     def __init__(self, api_client: object | None = None) -> None: ...
 
 
-def _iter_generated_classes(package: types.ModuleType, matcher: Callable[[type[object], str], bool]) -> list[type[Any]]:
+def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[object], str], bool]) -> list[type[Any]]:
     classes: list[type[BaseModel]] = []
-    for module_info in pkgutil.iter_modules(asyncio_for_ynab.models.__path__):
+    for module_info in pkgutil.iter_modules(module.__path__):
         if not module_info.name.startswith("_"):
-            for _, obj in inspect.getmembers(
-                module := importlib.import_module(f"{asyncio_for_ynab.models.__name__}.{module_info.name}"), inspect.isclass
-            ):
-                if matcher(obj, module.__name__):
+            module_ = importlib.import_module(f"{module.__name__}.{module_info.name}")
+            for _, obj in inspect.getmembers(module_, inspect.isclass):
+                if matcher(obj, module_.__name__):
                     classes.append(obj)
 
     return sorted(classes, key=lambda cls: cls.__name__)
