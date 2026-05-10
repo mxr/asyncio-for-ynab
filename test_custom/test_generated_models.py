@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
 def test_generated_model_serialization_helpers(model_class: type[BaseModel], subtests: pytest.Subtests) -> None:
+    reveal_type(model_class)
     payload = model_payload(model_class)
 
     model = model_class.from_dict(payload)
