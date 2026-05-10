@@ -32,28 +32,28 @@ class GeneratedApiClass(Protocol):
     def __init__(self, api_client: object | None = None) -> None: ...
 
 
-def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[object], str], bool]) -> list[type[Any]]:
+def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[object]], bool]) -> list[type[Any]]:
     classes: list[type[BaseModel]] = []
     for module_info in pkgutil.iter_modules(module.__path__):
         if not module_info.name.startswith("_"):
             module_ = importlib.import_module(f"{module.__name__}.{module_info.name}")
             for _, obj in inspect.getmembers(module_, inspect.isclass):
-                if matcher(obj, module_.__name__):
+                if obj.__module__ == module_.__name__ and matcher(obj):
                     classes.append(obj)
 
     return sorted(classes, key=lambda cls: cls.__name__)
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj, module_name: issubclass(obj, BaseModel) and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel))
 
 
 def iter_enum_classes() -> list[type[enum.Enum]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj, module_name: issubclass(obj, enum.Enum) and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum))
 
 
 def iter_api_classes() -> list[type[GeneratedApiClass]]:
-    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj, module_name: obj.__name__.endswith("Api") and obj.__module__ == module_name)
+    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api"))
 
 
 def _unwrap_annotation(annotation: Any) -> Any:
