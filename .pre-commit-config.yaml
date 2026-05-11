@@ -8,7 +8,7 @@ exclude: |
 
 repos:
 - repo: https://github.com/mxr/mirrors-openapi-generator-cli
-  rev: 814707fd5e1f3b08e1defaff0b93fe85c10d8892
+  rev: v7.22.0
   hooks:
   - id: openapi-generator-cli
     alias: openapi-validate
