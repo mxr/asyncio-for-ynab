@@ -14,15 +14,31 @@ from test_custom import model_payload
 from test_custom import value_for_annotation
 
 if TYPE_CHECKING:
+    from typing import Any
     from typing import Protocol
+
+    from typing_extensions import Self
 
     class EnumWithFromJson(Protocol):
         @classmethod
         def from_json(cls, data: str) -> object: ...
 
+    class GeneratedModel(BaseModel):
+        def to_dict(self) -> dict[str, Any]: ...
+
+        def to_json(self) -> str: ...
+
+        def to_str(self) -> str: ...
+
+        @classmethod
+        def from_dict(cls, obj: object | None) -> Self | None: ...
+
+        @classmethod
+        def from_json(cls, json_str: str) -> Self | None: ...
+
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
-def test_generated_model_serialization_helpers(model_class: type[BaseModel], subtests: pytest.Subtests) -> None:
+def test_generated_model_serialization_helpers(model_class: type[GeneratedModel], subtests: pytest.Subtests) -> None:
     payload = model_payload(model_class)
 
     model = model_class.from_dict(payload)
@@ -55,7 +71,7 @@ def test_generated_model_serialization_helpers(model_class: type[BaseModel], sub
 
 
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
-def test_generated_model_validators_reject_invalid_enums(model_class: type[BaseModel], subtests: pytest.Subtests) -> None:
+def test_generated_model_validators_reject_invalid_enums(model_class: type[GeneratedModel], subtests: pytest.Subtests) -> None:
     payload = model_payload(model_class)
     invalid_field_names = {"debt_transaction_type", "frequency", "goal_type", "type"}
     for name, field in model_class.model_fields.items():
