@@ -24,9 +24,6 @@ jobs:
             - .github/workflows/main.yml
             - '**/*.py'
             - '**/*.toml'
-            - '**/*.yaml'
-            - '**/*.yml'
-            - '**/*.mustache'
             - '**/setup.cfg'
   main-real:
     needs: [changes]
