@@ -5,7 +5,7 @@ info:
     and relies upon HTTPS for transport. We respond with meaningful HTTP
     response codes and if an error occurs, we include error details in the
     response body.  API Documentation is at https://api.ynab.com
-  version: 1.83.0
+  version: 1.84.0
 servers:
   - url: https://api.ynab.com/v1
 security:
@@ -2235,6 +2235,7 @@ components:
       required:
         - deleted
         - hidden
+        - internal
         - id
         - name
       type: object
@@ -2247,6 +2248,9 @@ components:
         hidden:
           type: boolean
           description: Whether or not the category group is hidden
+        internal:
+          type: boolean
+          description: Whether or not the category group is internal
         deleted:
           type: boolean
           description: Whether or not the category group has been deleted.  Deleted
@@ -2259,6 +2263,7 @@ components:
         - category_group_id
         - deleted
         - hidden
+        - internal
         - id
         - name
       type: object
@@ -2276,6 +2281,9 @@ components:
         hidden:
           type: boolean
           description: Whether or not the category is hidden
+        internal:
+          type: boolean
+          description: Whether or not the category is internal
         original_category_group_id:
           type:
             - string
@@ -3191,6 +3199,7 @@ components:
         category_group_id:
           type: string
           format: uuid
+          description: The id of the category group to which this category belongs.  An internal category group may not be specified.
         goal_target:
           type:
             - integer
