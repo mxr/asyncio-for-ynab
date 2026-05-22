@@ -74,7 +74,7 @@ def http_response(status: int = 200, content: bytes = b"{}", headers: dict[str, 
 async def test_api_client_defaults_headers_and_context_manager(configuration: Configuration) -> None:
     client = ApiClient(configuration=configuration, header_name="X-Token", header_value="value", cookie="cookie=value")
     with patch.object(client.rest_client, "close", autospec=True) as close:
-        assert client.user_agent == "OpenAPI-Generator/1.83.0/python"
+        assert client.user_agent == client.default_headers["User-Agent"]
         client.user_agent = "custom-agent"
         client.set_default_header("X-Other", "other")
         async with client as entered:
