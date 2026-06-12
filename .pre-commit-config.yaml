@@ -46,11 +46,6 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix]
     exclude: config/spec.yaml
-- repo: https://github.com/asottile/setup-cfg-fmt
-  rev: 9339507e9522e953c07479c9f6abeec0f2fe4e12  # frozen: v3.2.0
-  hooks:
-  - id: setup-cfg-fmt
-    args: [--min-py-version, '3.10']
 - repo: https://github.com/asottile/reorder-python-imports
   rev: 7885866bd38c852b5e042c4aeef0285d715ffeee  # frozen: v3.16.0
   hooks:
@@ -68,7 +63,34 @@ repos:
   - id: mypy
     language_version: python3.10
     additional_dependencies:
-    - pydantic
+    - aioresponses
+    - coverage
+    - httpx>=0.28.1
+    - pydantic>=2.11
+    - pytest
+    - pytest-asyncio
+    - python-dateutil>=2.8.2
+    - setuptools
+    - typing-extensions>=4.7.1
+- repo: https://github.com/mxr/mirrors-ty
+  rev: b0cc809b854427130bbdc84b922e0e38c6c6b8eb  # frozen: v0.0.48
+  hooks:
+  - id: ty
+    additional_dependencies:
+    - aioresponses
+    - coverage
+    - httpx>=0.28.1
+    - pydantic>=2.11
+    - pytest
+    - pytest-asyncio
+    - python-dateutil>=2.8.2
+    - setuptools
+    - typing-extensions>=4.7.1
+    language_version: python3.10
+- repo: https://github.com/mxr/sync-typing-deps
+  rev: 34b664ec01850e0d9cb4fe97c1a03d8ed71f393c  # frozen: v0.5.0
+  hooks:
+  - id: sync-typing-deps
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
   rev: 9257c6050c0261b8c57e712f632dc4a8010109a9  # frozen: v1.25.2
   hooks:

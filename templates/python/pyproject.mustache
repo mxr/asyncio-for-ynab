@@ -1,3 +1,56 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[dependency-groups]
+dev = [
+  "aioresponses",
+  "covdefaults>=2.1.0",
+  "coverage",
+  "pytest",
+  "pytest-asyncio",
+]
+
+[project]
+authors = [{name = "Max R", email = "mxr@users.noreply.github.com"}]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+{{#httpx}}
+  "httpx>=0.28.1",
+{{/httpx}}
+{{#asyncio}}
+  "aiohttp>=3.8.4",
+  "aiohttp-retry>=2.8.3",
+{{/asyncio}}
+{{#hasHttpSignatureMethods}}
+  "pem>=19.3.0",
+  "pycryptodome>=3.9.0",
+{{/hasHttpSignatureMethods}}
+  "pydantic>=2.11",
+  "python-dateutil>=2.8.2",
+  "typing-extensions>=4.7.1",
+{{#lazyImports}}
+  "lazy-imports>=1,<2",
+{{/lazyImports}}
+]
+description = "Unofficial asyncio client for the YNAB API."
+keywords = ["ynab", "budget", "asyncio", "openapi", "httpx"]
+license = "MIT"
+name = "asyncio_for_ynab"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "{{{packageVersion}}}"
+
+[project.urls]
+Homepage = "https://github.com/mxr/asyncio-for-ynab"
+
+[tool.coverage.run]
+plugins = ["covdefaults"]
+
 [tool.mypy]
 check_untyped_defs = true
 disallow_any_generics = true
@@ -32,3 +85,25 @@ extend-select = [
   "SIM",  # see flake8-simplify
   "TC",  # see flake8-type-checking
 ]
+
+[tool.setuptools.package-data]
+asyncio_for_ynab = ["py.typed"]
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.tox]
+env_list = ["py310", "py311", "py312", "py313", "py314", "pre-commit"]
+
+[tool.tox.env.pre-commit]
+commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
+deps = ["pre-commit"]
+skip_install = true
+
+[tool.tox.env_run_base]
+commands = [
+  ["coverage", "erase"],
+  ["coverage", "run", "-m", "pytest", "{posargs:test test_custom}"],
+  ["coverage", "report"],
+]
+dependency_groups = ["dev"]
