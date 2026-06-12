@@ -85,6 +85,7 @@ async def test_generated_unittest_stubs_execute_make_instance_methods(test_class
     instance.setUp()
     try:
         if hasattr(instance, "make_instance"):
+            # https://github.com/astral-sh/ty/issues/3753
             make_instance = cast("Any", instance).make_instance
             assert make_instance(include_optional=False) is None
             assert make_instance(include_optional=True) is None
