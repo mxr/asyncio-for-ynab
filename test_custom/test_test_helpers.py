@@ -23,7 +23,7 @@ import test_custom as conftest
 
 @runtime_checkable
 class _HasMakeInstance(Protocol):
-    def make_instance(self, include_optional: bool) -> None: ...
+    def make_instance(self, include_optional: bool) -> object: ...
 
 
 class LocalEnum(enum.Enum):
@@ -90,8 +90,8 @@ async def test_generated_unittest_stubs_execute_make_instance_methods(test_class
     instance.setUp()
     try:
         if isinstance(instance, _HasMakeInstance):
-            instance.make_instance(include_optional=False)
-            instance.make_instance(include_optional=True)
+            assert instance.make_instance(include_optional=False) is None
+            assert instance.make_instance(include_optional=True) is None
         for name in dir(instance):
             if name.startswith("test"):
                 with subtests.test(test_class=test_class.__name__, method=name):
