@@ -17,6 +17,7 @@
 git_push.sh
 README.md
 requirements.txt
+setup.cfg
 setup.py
 test-requirements.txt
 scripts/**

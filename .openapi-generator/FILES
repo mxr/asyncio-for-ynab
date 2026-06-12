@@ -272,5 +272,4 @@ docs/UserApi.md
 docs/UserResponse.md
 docs/UserResponseData.md
 pyproject.toml
-setup.cfg
 test/__init__.py

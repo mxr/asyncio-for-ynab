@@ -8,8 +8,10 @@ import inspect
 import pkgutil
 import unittest
 from collections.abc import Awaitable
-from importlib.machinery import PathFinder
+from importlib.abc import MetaPathFinder
 from typing import Annotated
+from typing import Any
+from typing import cast
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -29,7 +31,7 @@ class EmptyModel(BaseModel):
 
 @patch("test_custom.pkgutil.iter_modules", autospec=True)
 def test_iter_helpers_skip_private_modules(iter_modules: Mock) -> None:
-    iter_modules.return_value = [pkgutil.ModuleInfo(PathFinder, "_private", False)]
+    iter_modules.return_value = [pkgutil.ModuleInfo(MetaPathFinder(), "_private", False)]
     assert conftest.iter_model_classes() == []
     assert conftest.iter_enum_classes() == []
     assert conftest.iter_api_classes() == []
@@ -83,8 +85,10 @@ async def test_generated_unittest_stubs_execute_make_instance_methods(test_class
     instance.setUp()
     try:
         if hasattr(instance, "make_instance"):
-            assert instance.make_instance(include_optional=False) is None
-            assert instance.make_instance(include_optional=True) is None
+            # https://github.com/astral-sh/ty/issues/3753
+            make_instance = cast("Any", instance).make_instance
+            assert make_instance(include_optional=False) is None
+            assert make_instance(include_optional=True) is None
         for name in dir(instance):
             if name.startswith("test"):
                 with subtests.test(test_class=test_class.__name__, method=name):
