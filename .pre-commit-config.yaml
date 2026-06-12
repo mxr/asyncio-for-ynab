@@ -8,7 +8,7 @@ exclude: |
 
 repos:
 - repo: https://github.com/mxr/mirrors-openapi-generator-cli
-  rev: 71bdf4d980586838391217b0c2c184aa132c1216  # frozen: v7.22.0
+  rev: 4f81b48989ed7c5f76cfd37a07320dd0eb2e2d16  # frozen: v7.23.0
   hooks:
   - id: openapi-generator-cli
     alias: openapi-validate
@@ -52,7 +52,7 @@ repos:
   - id: reorder-python-imports
     args: [--py310-plus, --add-import, from __future__ import annotations]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 0671d8ab202c4ac093b78433ae5baf74f3fc7246  # frozen: v0.15.15
+  rev: 3b3f7c3f57fe9925356faf5fe6230835138be230  # frozen: v0.15.17
   hooks:
   - id: ruff-check
     args: [--fix]
