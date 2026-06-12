@@ -10,8 +10,8 @@ import unittest
 from collections.abc import Awaitable
 from importlib.abc import MetaPathFinder
 from typing import Annotated
-from typing import Any
-from typing import cast
+from typing import Protocol
+from typing import runtime_checkable
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -19,6 +19,11 @@ import pytest
 from pydantic import BaseModel
 
 import test_custom as conftest
+
+
+@runtime_checkable
+class _HasMakeInstance(Protocol):
+    def make_instance(self, include_optional: bool) -> object: ...
 
 
 class LocalEnum(enum.Enum):
@@ -84,11 +89,9 @@ async def test_generated_unittest_stubs_execute_make_instance_methods(test_class
     instance = test_class()
     instance.setUp()
     try:
-        if hasattr(instance, "make_instance"):
-            # https://github.com/astral-sh/ty/issues/3753
-            make_instance = cast("Any", instance).make_instance
-            assert make_instance(include_optional=False) is None
-            assert make_instance(include_optional=True) is None
+        if isinstance(instance, _HasMakeInstance):
+            assert instance.make_instance(include_optional=False) is None
+            assert instance.make_instance(include_optional=True) is None
         for name in dir(instance):
             if name.startswith("test"):
                 with subtests.test(test_class=test_class.__name__, method=name):
