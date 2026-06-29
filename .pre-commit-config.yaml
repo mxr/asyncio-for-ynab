@@ -52,7 +52,7 @@ repos:
   - id: reorder-python-imports
     args: [--py310-plus, --add-import, from __future__ import annotations]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 745be0411e3c150e246d527e531e5a221b8c3462  # frozen: v0.15.19
+  rev: c59bba8fb259db0fec2bbb77ad8ba51ea7341b56  # frozen: v0.15.20
   hooks:
   - id: ruff-check
     args: [--fix]
@@ -73,7 +73,7 @@ repos:
     - setuptools
     - typing-extensions>=4.7.1
 - repo: https://github.com/mxr/mirrors-ty
-  rev: 4f25e15af7c42962b26e8a429ba83d68210e315a  # frozen: v0.0.52
+  rev: 009c8adeffbab5aa73005612dd5a7fd9b825eee5  # frozen: v0.0.55
   hooks:
   - id: ty
     additional_dependencies:
