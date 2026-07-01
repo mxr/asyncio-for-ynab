@@ -33,7 +33,7 @@ class GeneratedApiClass(Protocol):
 
 
 def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[object]], bool]) -> list[type[Any]]:
-    classes: list[type[BaseModel]] = []
+    classes: list[type[Any]] = []
     for module_info in pkgutil.iter_modules(module.__path__):
         if not module_info.name.startswith("_"):
             module_ = importlib.import_module(f"{module.__name__}.{module_info.name}")
