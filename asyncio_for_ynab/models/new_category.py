@@ -32,7 +32,7 @@ class NewCategory(BaseModel):
     name: Optional[StrictStr] = None
     note: Optional[StrictStr] = None
     category_group_id: Optional[UUID] = Field(default=None, description="The id of the category group to which this category belongs.  An internal category group may not be specified.")
-    goal_target: Optional[StrictInt] = Field(default=None, description="The goal target amount in milliunits format.  If value is specified and goal has not already been configured for category, a monthly goal will be created for the category with this target amount.  If goal_type is not specified, it will default to 'NEED' or 'MF' for Credit Card Payment categories.")
+    goal_target: Optional[StrictInt] = Field(default=None, description="The goal target amount in milliunits format.  If value is specified and goal has not already been configured for category, a monthly goal will be created for the category with this target amount.  If goal_type is not specified, it will default to 'NEED' or 'MF' for Credit Card Payment categories. When updating a category, passing null removes any existing target.")
     goal_target_date: Optional[date] = Field(default=None, description="The goal target date in ISO format (e.g. 2016-12-01).")
     goal_needs_whole_amount: Optional[StrictBool] = Field(default=None, description="Whether the goal requires the full target amount each period. Only supported for 'NEED' goals. When true, the goal is configured as 'Set aside another...'. When false, the goal is configured as 'Refill up to...'.")
     __properties: ClassVar[List[str]] = ["name", "note", "category_group_id", "goal_target", "goal_target_date", "goal_needs_whole_amount"]
