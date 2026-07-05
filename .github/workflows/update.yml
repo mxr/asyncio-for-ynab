@@ -24,7 +24,20 @@ jobs:
         tmp="$(mktemp)"
         trap 'rm -f "$tmp"' EXIT
 
-        curl --fail --location --silent --show-error --pinnedpubkey "${{ vars.YNAB_API_PUBKEY_PIN }}" "https://api.ynab.com/papi/open_api_spec.yaml" --output "$tmp"
+        # --pinnedpubkey guards against MITM by verifying the server's TLS public key.
+        # To rotate the pin after a legitimate YNAB cert change, run:
+        #   openssl s_client -connect api.ynab.com:443 </dev/null 2>/dev/null |
+        #   openssl x509 -pubkey -noout |
+        #   openssl pkey -pubin -outform der |
+        #   openssl dgst -sha256 -binary | base64
+        # then update the YNAB_API_PUBKEY_PIN repository variable with the result,
+        # prefixed with "sha256//".
+        curl --fail --location --silent --show-error \
+          --tlsv1.2 \
+          --noproxy '*' \
+          --pinnedpubkey "${{ vars.YNAB_API_PUBKEY_PIN }}" \
+          "https://api.ynab.com/papi/open_api_spec.yaml" \
+          --output "$tmp"
 
         if cmp -s config/spec.yaml "$tmp"; then
           echo "YNAB spec is already current."
