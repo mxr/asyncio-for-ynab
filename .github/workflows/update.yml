@@ -24,7 +24,7 @@ jobs:
         tmp="$(mktemp)"
         trap 'rm -f "$tmp"' EXIT
 
-        curl --fail --location --silent --show-error "https://api.ynab.com/papi/open_api_spec.yaml" --output "$tmp"
+        curl --fail --location --silent --show-error --pinnedpubkey "${{ vars.YNAB_API_PUBKEY_PIN }}" "https://api.ynab.com/papi/open_api_spec.yaml" --output "$tmp"
 
         if cmp -s config/spec.yaml "$tmp"; then
           echo "YNAB spec is already current."
