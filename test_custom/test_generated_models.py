@@ -73,7 +73,7 @@ def test_generated_model_serialization_helpers(model_class: type[GeneratedModel]
 @pytest.mark.parametrize("model_class", iter_model_classes(), ids=lambda cls: cls.__name__)
 def test_generated_model_validators_reject_invalid_enums(model_class: type[GeneratedModel], subtests: pytest.Subtests) -> None:
     payload = model_payload(model_class)
-    str_enum_field_names = {"debt_transaction_type", "frequency", "goal_frequency", "goal_type", "type"}
+    str_enum_field_names = {attr.removesuffix("_validate_enum") for attr in vars(model_class) if attr.endswith("_validate_enum")}
     for name, field in model_class.model_fields.items():
         if name in str_enum_field_names and not hasattr(field.annotation, "__members__"):
             with subtests.test(model=model_class.__name__, field=name):
