@@ -124,6 +124,8 @@ def value_for_field(name: str, annotation: Any) -> Any:
         return "payment"
     if name == "frequency":
         return "never"
+    if name == "goal_frequency":
+        return "monthly"
     if name == "type":
         return "transaction"
     return value_for_annotation(annotation)
