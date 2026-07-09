@@ -17,6 +17,7 @@ jobs:
     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0   # v7.0.0
       with:
         persist-credentials: false
+        fetch-depth: 0
 
     - name: Download upstream spec
       id: download
@@ -69,13 +70,32 @@ jobs:
         trap - EXIT
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
+    - name: Determine revision
+      if: env.CHANGED == 'true'
+      run: |
+        base_title="Update YNAB API spec to v$SPEC_VERSION"
+        pattern="^${base_title}( \(revision [0-9]+\))?\$"
+
+        # Count prior commits on this branch that updated to the same spec
+        # version, so a same-version doc-only re-sync gets a distinguishing
+        # "(revision N)" suffix instead of an identical, confusing title.
+        count="$(git log --oneline --grep="$pattern" --extended-regexp | wc -l | tr -d ' ')"
+
+        if [ "$count" -eq 0 ]; then
+          echo "SPEC_TITLE=$base_title" >> "$GITHUB_ENV"
+        else
+          echo "SPEC_TITLE=$base_title (revision $((count + 1)))" >> "$GITHUB_ENV"
+        fi
+      env:
+        SPEC_VERSION: ${{ env.SPEC_VERSION }}
+
     - name: Create pull request
       if: env.CHANGED == 'true'
       uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1   # v8.1.1
       env:
-        SPEC_VERSION: ${{ env.SPEC_VERSION }}
+        SPEC_TITLE: ${{ env.SPEC_TITLE }}
       with:
         branch: update-ynab-spec
-        title: Update YNAB API spec to v${{ env.SPEC_VERSION }}
-        commit-message: Update YNAB API spec to v${{ env.SPEC_VERSION }}
+        title: ${{ env.SPEC_TITLE }}
+        commit-message: ${{ env.SPEC_TITLE }}
         draft: true
