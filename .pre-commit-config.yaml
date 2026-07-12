@@ -36,6 +36,8 @@ repos:
   - id: check-docstring-first
   - id: debug-statements
   - id: end-of-file-fixer
+  - id: pretty-format-json
+    args: [--autofix, --indent=2]
   - id: trailing-whitespace
     exclude: config/spec.yaml
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks

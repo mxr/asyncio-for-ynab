@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "groupName": "Weekly dependency updates",
+  "minimumReleaseAge": "7 days",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "separateMajorMinor": false,
+  "separateMultipleMajor": false
+}
