@@ -6,15 +6,17 @@
     "config:recommended",
     ":disableDependencyDashboard"
   ],
+  "minimumReleaseAge": "7 days",
   "packageRules": [
     {
-      "matchPackageNames": ["*"],
-      "groupName": "default",
+      "commitMessageExtra": "",
       "commitMessageTopic": "",
-      "commitMessageExtra": ""
+      "groupName": "default",
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ],
-  "minimumReleaseAge": "7 days",
   "prBodyTemplate": "{{{table}}}",
   "schedule": [
     "before 6am on monday"
