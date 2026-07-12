@@ -1,32 +1,27 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-
-  "commitMessagePrefix": "[renovate]",
   "commitMessageAction": "weekly update",
-
+  "commitMessagePrefix": "[renovate]",
   "extends": [
     "config:recommended",
     ":disableDependencyDashboard"
   ],
-
   "minimumReleaseAge": "7 days",
-
   "packageRules": [
     {
-      "matchPackageNames": ["*"],
-      "groupName": "default",
       "commitMessageExtra": " ",
       "commitMessageSuffix": " ",
-      "commitMessageTopic": " "
+      "commitMessageTopic": " ",
+      "groupName": "default",
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ],
-
   "prBodyTemplate": "{{{table}}}",
-
   "schedule": [
     "before 6am on monday"
   ],
-
   "separateMajorMinor": false,
   "separateMultipleMajor": false
 }
