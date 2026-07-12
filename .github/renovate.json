@@ -6,11 +6,11 @@
   ],
   "groupName": "default",
   "minimumReleaseAge": "7 days",
+  "prBodyTemplate": "{{{table}}}",
+  "prTitle": "[renovate] weekly update",
   "schedule": [
     "before 6am on monday"
   ],
   "separateMajorMinor": false,
-  "separateMultipleMajor": false,
-   "prTitle": "[renovate] weekly update",
-    "prBodyTemplate": "{{{table}}}"
+  "separateMultipleMajor": false
 }
