@@ -14,7 +14,7 @@
   "packageRules": [
     {
       "matchPackageNames": ["*"],
-      "groupName": "weekly",
+      "groupName": "default",
       "commitMessageExtra": " ",
       "commitMessageSuffix": " ",
       "commitMessageTopic": " "
