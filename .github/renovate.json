@@ -7,7 +7,9 @@
   "groupName": "default",
   "minimumReleaseAge": "7 days",
   "prBodyTemplate": "{{{table}}}",
-  "prTitle": "[renovate] weekly update",
+"commitMessagePrefix": "[renovate]",
+"commitMessageAction": "weekly update",
+"commitMessageTopic": null,
   "schedule": [
     "before 6am on monday"
   ],
