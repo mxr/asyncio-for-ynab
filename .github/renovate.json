@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "commitMessageAction": "weekly update",
+  "commitMessageAction": "weekly",
   "commitMessagePrefix": "[renovate]",
   "extends": [
     "config:recommended",
@@ -12,7 +12,7 @@
       "commitMessageExtra": " ",
       "commitMessageSuffix": " ",
       "commitMessageTopic": " ",
-      "groupName": "default",
+      "groupName": "update",
       "matchPackageNames": [
         "*"
       ]
