@@ -9,8 +9,9 @@
   "minimumReleaseAge": "7 days",
   "packageRules": [
     {
-      "commitMessageExtra": "",
-      "commitMessageTopic": "",
+      "commitMessageExtra": " ",
+      "commitMessageSuffix": " ",
+      "commitMessageTopic": " ",
       "groupName": "default",
       "matchPackageNames": [
         "*"
