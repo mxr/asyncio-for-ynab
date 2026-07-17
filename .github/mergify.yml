@@ -14,3 +14,11 @@ pull_request_rules:
   actions:
     merge:
       method: squash
+
+- name: automatic merge for spec updates
+  conditions:
+  - author=github[bot]
+  - title~= ^Update YNAB API spec
+  actions:
+    merge:
+      method: squash
