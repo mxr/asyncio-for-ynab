@@ -98,4 +98,4 @@ jobs:
         branch: update-ynab-spec
         title: ${{ env.SPEC_TITLE }}
         commit-message: ${{ env.SPEC_TITLE }}
-        draft: true
+        body: ''
