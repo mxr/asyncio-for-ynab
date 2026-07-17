@@ -8,13 +8,13 @@ This project is not affiliated with, endorsed by, or officially connected with Y
 
 ## Install
 
-```bash
+```sh
 python -m pip install asyncio-for-ynab
 ```
 
 For local development:
 
-```bash
+```sh
 python -m pip install -e ".[dev]"
 ```
 
@@ -75,13 +75,13 @@ from asyncio_for_ynab import TransactionResponse
 
 Run the repository checks with pre-commit:
 
-```bash
+```sh
 pre-commit run --all-files
 ```
 
 Run the test suite:
 
-```bash
+```sh
 tox -e py
 ```
 
