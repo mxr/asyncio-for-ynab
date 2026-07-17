@@ -74,7 +74,7 @@ jobs:
       if: env.CHANGED == 'true'
       run: |
         base_title="Update YNAB API spec to v$SPEC_VERSION"
-        pattern="^${base_title}( \(revision [0-9]+\))?\$"
+        pattern="^${base_title}( \(revision [0-9]+\))?"
 
         # Count prior commits on this branch that updated to the same spec
         # version, so a same-version doc-only re-sync gets a distinguishing
