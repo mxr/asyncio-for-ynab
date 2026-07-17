@@ -76,10 +76,13 @@ jobs:
         base_title="Update YNAB API spec to v$SPEC_VERSION"
         pattern="^${base_title}( \(revision [0-9]+\))?"
 
-        # Count prior commits on this branch that updated to the same spec
-        # version, so a same-version doc-only re-sync gets a distinguishing
-        # "(revision N)" suffix instead of an identical, confusing title.
-        count="$(git log --oneline --grep="$pattern" --extended-regexp | wc -l | tr -d ' ')"
+        latest_tag="$(git describe --tags --abbrev=0)"
+
+        # Count prior commits since the latest release tag that updated to
+        # the same spec version, so a same-version doc-only re-sync gets a
+        # distinguishing "(revision N)" suffix instead of an identical,
+        # confusing title.
+        count="$(git log --oneline --grep="$pattern" --extended-regexp "$latest_tag"^..HEAD | wc -l | tr -d ' ')"
 
         if [ "$count" -eq 0 ]; then
           echo "SPEC_TITLE=$base_title" >> "$GITHUB_ENV"
