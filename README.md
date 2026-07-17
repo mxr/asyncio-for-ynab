@@ -85,8 +85,12 @@ Run the test suite:
 tox -e py
 ```
 
-## Release Notes
+## Versioning
 
-Package versions mirror the YNAB API spec version.
+Package versions mirror the YNAB API spec version. For example, spec `1.83.0` is published as `asyncio-for-ynab==1.83.0`.
 
-For example, spec `1.83.0` is published as `asyncio-for-ynab==1.83.0`.
+Sometimes YNAB updates the spec without raising the version (for example, documentation updates). Releases are not created in this case. Install from `main` to pull in these changes.
+
+## Changelog / Release Notes
+
+This project publishes auto-generated release notes. For YNAB API release notes, see https://api.ynab.com/#changelog
