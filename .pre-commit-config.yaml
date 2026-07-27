@@ -71,8 +71,8 @@ repos:
     - pydantic>=2.11
     - pytest
     - pytest-asyncio
-    - python-dateutil>=2.8.2
-    - setuptools
+    - types-python-dateutil
+    - types-setuptools
     - typing-extensions>=4.7.1
 - repo: https://github.com/mxr/mirrors-ty
   rev: d7f08bf6b37691c482773f198ba01539eb331d6a  # frozen: v0.0.63
@@ -85,8 +85,8 @@ repos:
     - pydantic>=2.11
     - pytest
     - pytest-asyncio
-    - python-dateutil>=2.8.2
-    - setuptools
+    - types-python-dateutil
+    - types-setuptools
     - typing-extensions>=4.7.1
     language_version: python3.10
 - repo: https://github.com/mxr/sync-typing-deps

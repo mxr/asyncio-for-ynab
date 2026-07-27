@@ -4,18 +4,12 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import BaseModel
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
-from test_custom import allows_none
-from test_custom import iter_enum_classes
-from test_custom import iter_model_classes
-from test_custom import model_payload
-from test_custom import value_for_annotation
+from test_custom import allows_none, iter_enum_classes, iter_model_classes, model_payload, value_for_annotation
 
 if TYPE_CHECKING:
-    from typing import Any
-    from typing import Protocol
+    from typing import Any, Protocol
 
     from typing_extensions import Self
 

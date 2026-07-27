@@ -9,11 +9,8 @@ import pkgutil
 import unittest
 from collections.abc import Awaitable
 from importlib.abc import MetaPathFinder
-from typing import Annotated
-from typing import Protocol
-from typing import runtime_checkable
-from unittest.mock import Mock
-from unittest.mock import patch
+from typing import Annotated, Protocol, runtime_checkable
+from unittest.mock import Mock, patch
 
 import pytest
 from pydantic import BaseModel

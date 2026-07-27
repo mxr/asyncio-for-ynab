@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import inspect
 from types import SimpleNamespace
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from asyncio_for_ynab.api_response import ApiResponse
-from test_custom import GeneratedApiClass
-from test_custom import iter_api_classes
-from test_custom import value_for_parameter
+from test_custom import GeneratedApiClass, iter_api_classes, value_for_parameter
 
 if TYPE_CHECKING:
     from collections.abc import Callable
