@@ -7,6 +7,20 @@ exclude: |
   )$
 
 repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: cb8c523fd4835aba42af70f4cad5568db4df0b6c  # frozen: v0.16.0
+  hooks:
+  - id: ruff-check
+    args: [--fix]
+  - id: ruff-format
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # frozen: v2.16.0
+  hooks:
+  - id: pretty-format-toml
+    args: [--autofix, --trailing-commas]
+  - id: pretty-format-yaml
+    args: [--autofix]
+    exclude: config/spec.yaml
 - repo: https://github.com/mxr/mirrors-openapi-generator-cli
   rev: e18b9ac0d2dd7fb1795dccab884353774e68fb5a  # frozen: v7.24.0
   hooks:
@@ -30,45 +44,6 @@ repos:
           config/.*\.ya?ml|
           templates/python/.*\.mustache
       )$
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
-  hooks:
-  - id: check-docstring-first
-  - id: debug-statements
-  - id: end-of-file-fixer
-  - id: pretty-format-json
-    args: [--autofix, --indent=2]
-  - id: trailing-whitespace
-    exclude: config/spec.yaml
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # frozen: v2.16.0
-  hooks:
-  - id: pretty-format-toml
-    args: [--autofix, --trailing-commas]
-  - id: pretty-format-yaml
-    args: [--autofix]
-    exclude: config/spec.yaml
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: cb8c523fd4835aba42af70f4cad5568db4df0b6c  # frozen: v0.16.0
-  hooks:
-  - id: ruff-check
-    args: [--fix]
-  - id: ruff-format
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: 41e691678310dfd3833f7ab4e180ddb014310356  # frozen: v2.3.0
-  hooks:
-  - id: mypy
-    language_version: python3.10
-    additional_dependencies:
-    - aioresponses
-    - coverage
-    - httpx>=0.28.1
-    - pydantic>=2.11
-    - pytest
-    - pytest-asyncio
-    - types-python-dateutil
-    - types-setuptools
-    - typing-extensions>=4.7.1
 - repo: https://github.com/mxr/mirrors-ty
   rev: d7f08bf6b37691c482773f198ba01539eb331d6a  # frozen: v0.0.63
   hooks:
@@ -88,14 +63,39 @@ repos:
   rev: a8b960f5e2bb3627b5a1fc8171fe224cdd64ff0a  # frozen: v0.5.4
   hooks:
   - id: sync-typing-deps
-- repo: https://github.com/zizmorcore/zizmor-pre-commit
-  rev: 067260dc5fe6ea86b7551bfd6f8b3ba4e6c93129  # frozen: v1.28.0
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: 41e691678310dfd3833f7ab4e180ddb014310356  # frozen: v2.3.0
   hooks:
-  - id: zizmor
-    args: [--no-progress, --fix]
+  - id: mypy
+    language_version: python3.10
+    additional_dependencies:
+    - aioresponses
+    - coverage
+    - httpx>=0.28.1
+    - pydantic>=2.11
+    - pytest
+    - pytest-asyncio
+    - types-python-dateutil
+    - types-setuptools
+    - typing-extensions>=4.7.1
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+  hooks:
+  - id: check-docstring-first
+  - id: debug-statements
+  - id: end-of-file-fixer
+  - id: pretty-format-json
+    args: [--autofix, --indent=2]
+  - id: trailing-whitespace
+    exclude: config/spec.yaml
 - repo: https://github.com/rhysd/actionlint
   rev: 914e7df21a07ef503a81201c76d2b11c789d3fca  # frozen: v1.7.12
   hooks:
   - id: actionlint
     additional_dependencies:
     - github.com/wasilibs/go-shellcheck/cmd/shellcheck@latest
+- repo: https://github.com/zizmorcore/zizmor-pre-commit
+  rev: 067260dc5fe6ea86b7551bfd6f8b3ba4e6c93129  # frozen: v1.28.0
+  hooks:
+  - id: zizmor
+    args: [--no-progress, --fix]
