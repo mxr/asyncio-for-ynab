@@ -208,12 +208,15 @@ def test_update_params_for_auth_variants(api_client: ApiClient) -> None:
         headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"}
     )
     api_client.update_params_for_auth(
+        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'}
+    )
+    api_client.update_params_for_auth(
         headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "query", "key": "q", "value": "v"}
     )
     api_client.update_params_for_auth(
         headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "http-signature", "in": "header", "key": "Signature", "value": "skip"}
     )
-    assert headers["Cookie"] == "abc"
+    assert headers["Cookie"] == 'sid="abc"; csrf="already-quoted"'
     assert ("q", "v") in queries
     assert "Signature" not in headers
     with pytest.raises(ApiValueError):
@@ -274,6 +277,11 @@ async def test_response_deserialize_success_variants(api_client: ApiClient) -> N
     missing_content_type = rest.RESTResponse(httpx.Response(200, content=b'"value"', request=httpx.Request("GET", "https://api.example")))
     await missing_content_type.read()
     assert api_client.response_deserialize(missing_content_type, {"200": "str"}).data == "value"
+
+    default_response = http_response(content=b'{"data": {"foo": "bar"}}')
+    await default_response.read()
+    result = api_client.response_deserialize(default_response, {"default": "object"})
+    assert result.data == {"data": {"foo": "bar"}}
 
 
 @pytest.mark.asyncio
@@ -396,6 +404,7 @@ def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
         log_file = tmp_path / "client.log"
         config.logger_file = str(log_file)
         config.debug = True
+        assert config.debug is True
         config.debug = False
         copied = config.__deepcopy__({})
         assert copied.host == config.host
