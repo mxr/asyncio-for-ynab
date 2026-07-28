@@ -187,41 +187,86 @@ def test_files_parameters_accept_supported_shapes(api_client: ApiClient, tmp_pat
         files_parameters({"bad": object()})
 
 
-def test_header_selection(api_client: ApiClient) -> None:
-    assert api_client.select_header_accept([]) is None
-    assert api_client.select_header_accept(["text/plain", "application/json"]) == "application/json"
-    assert api_client.select_header_accept(["text/plain"]) == "text/plain"
-    assert api_client.select_header_content_type([]) is None
-    assert api_client.select_header_content_type(["text/plain", "application/json"]) == "application/json"
-    assert api_client.select_header_content_type(["text/plain"]) == "text/plain"
+@pytest.mark.parametrize(
+    ("method_name", "accepts", "expected"),
+    [
+        pytest.param("select_header_accept", [], None, id="accept-empty"),
+        pytest.param("select_header_accept", ["text/plain", "application/json"], "application/json", id="accept-prefers-json"),
+        pytest.param("select_header_accept", ["text/plain"], "text/plain", id="accept-single"),
+        pytest.param("select_header_content_type", [], None, id="content-type-empty"),
+        pytest.param("select_header_content_type", ["text/plain", "application/json"], "application/json", id="content-type-prefers-json"),
+        pytest.param("select_header_content_type", ["text/plain"], "text/plain", id="content-type-single"),
+    ],
+)
+def test_header_selection(api_client: ApiClient, method_name: str, accepts: list[str], expected: str | None) -> None:
+    assert getattr(api_client, method_name)(accepts) == expected
 
 
-def test_update_params_for_auth_variants(api_client: ApiClient) -> None:
+@pytest.mark.parametrize(
+    ("auth_settings_names", "request_auth", "expected_headers", "expected_queries"),
+    [
+        pytest.param([], None, {}, [], id="no-auth"),
+        pytest.param(["bearer"], None, {"Authorization": "Bearer token"}, [], id="configured-bearer"),
+        pytest.param(["missing"], None, {}, [], id="unconfigured-scheme-is-noop"),
+        pytest.param(
+            ["ignored"],
+            {"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"},
+            {"Cookie": 'sid="abc"'},
+            [],
+            id="request-auth-cookie",
+        ),
+        pytest.param(
+            ["ignored"],
+            {"type": "api_key", "in": "query", "key": "q", "value": "v"},
+            {},
+            [("q", "v")],
+            id="request-auth-query",
+        ),
+        pytest.param(
+            ["ignored"],
+            {"type": "http-signature", "in": "header", "key": "Signature", "value": "skip"},
+            {},
+            [],
+            id="request-auth-http-signature-skipped",
+        ),
+    ],
+)
+def test_update_params_for_auth_variants(
+    api_client: ApiClient,
+    auth_settings_names: list[str],
+    request_auth: dict[str, str] | None,
+    expected_headers: dict[str, str],
+    expected_queries: list[tuple[str, str]],
+) -> None:
     headers: dict[str, str] = {}
     queries: list[tuple[str, str]] = []
-    api_client.update_params_for_auth(headers, queries, [], "/", "GET", None)
-    assert headers == {}
-    api_client.update_params_for_auth(headers, queries, ["bearer"], "/", "GET", None)
-    assert headers["Authorization"] == "Bearer token"
-    api_client.update_params_for_auth(headers, queries, ["missing"], "/", "GET", None)
+    api_client.update_params_for_auth(headers, queries, auth_settings_names, "/", "GET", None, request_auth=request_auth)
+    assert headers == expected_headers
+    assert queries == expected_queries
+
+
+def test_update_params_for_auth_appends_and_reuses_quoted_cookie_values(api_client: ApiClient) -> None:
+    headers: dict[str, str] = {}
+    queries: list[tuple[str, str]] = []
     api_client.update_params_for_auth(
         headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"}
     )
     api_client.update_params_for_auth(
-        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'}
-    )
-    api_client.update_params_for_auth(
-        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "query", "key": "q", "value": "v"}
-    )
-    api_client.update_params_for_auth(
-        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "http-signature", "in": "header", "key": "Signature", "value": "skip"}
+        headers,
+        queries,
+        ["ignored"],
+        "/",
+        "GET",
+        None,
+        request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'},
     )
     assert headers["Cookie"] == 'sid="abc"; csrf="already-quoted"'
-    assert ("q", "v") in queries
-    assert "Signature" not in headers
+
+
+def test_update_params_for_auth_rejects_unsupported_location(api_client: ApiClient) -> None:
     with pytest.raises(ApiValueError):
         api_client.update_params_for_auth(
-            headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "body", "key": "x", "value": "y"}
+            {}, [], ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "body", "key": "x", "value": "y"}
         )
 
 
@@ -251,37 +296,36 @@ async def test_call_api_delegates_and_reraises(api_client: ApiClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_response_deserialize_success_variants(api_client: ApiClient) -> None:
+async def test_response_deserialize_requires_read(api_client: ApiClient) -> None:
     pending = http_response(content=b"{}")
     with pytest.raises(AssertionError):
         api_client.response_deserialize(pending, {"200": "object"})
 
-    raw = http_response(content=b"raw")
-    await raw.read()
-    assert api_client.response_deserialize(raw, {"200": "bytes"}).data == b"raw"
 
-    fallback = http_response(content=b'{"data": {"foo": "bar"}}')
-    await fallback.read()
-    result = api_client.response_deserialize(fallback, {"2XX": "object"})
-    assert result.status_code == 200
-    assert result.data == {"data": {"foo": "bar"}}
-
-    text = http_response(content=b"value", headers={"content-type": "text/plain; charset=utf-8"})
-    await text.read()
-    assert api_client.response_deserialize(text, {"200": "str"}).data == "value"
-
-    no_type = http_response(content=b"value")
-    await no_type.read()
-    assert api_client.response_deserialize(no_type, {}).data is None
-
-    missing_content_type = rest.RESTResponse(httpx.Response(200, content=b'"value"', request=httpx.Request("GET", "https://api.example")))
-    await missing_content_type.read()
-    assert api_client.response_deserialize(missing_content_type, {"200": "str"}).data == "value"
-
-    default_response = http_response(content=b'{"data": {"foo": "bar"}}')
-    await default_response.read()
-    result = api_client.response_deserialize(default_response, {"default": "object"})
-    assert result.data == {"data": {"foo": "bar"}}
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("response", "response_types_map", "expected_data"),
+    [
+        pytest.param(http_response(content=b"raw"), {"200": "bytes"}, b"raw", id="bytes"),
+        pytest.param(http_response(content=b'{"data": {"foo": "bar"}}'), {"2XX": "object"}, {"data": {"foo": "bar"}}, id="status-class-fallback"),
+        pytest.param(
+            http_response(content=b"value", headers={"content-type": "text/plain; charset=utf-8"}), {"200": "str"}, "value", id="text-plain"
+        ),
+        pytest.param(http_response(content=b"value"), {}, None, id="no-matching-type"),
+        pytest.param(
+            rest.RESTResponse(httpx.Response(200, content=b'"value"', request=httpx.Request("GET", "https://api.example"))),
+            {"200": "str"},
+            "value",
+            id="missing-content-type-header",
+        ),
+        pytest.param(http_response(content=b'{"data": {"foo": "bar"}}'), {"default": "object"}, {"data": {"foo": "bar"}}, id="default-fallback"),
+    ],
+)
+async def test_response_deserialize_success_variants(
+    api_client: ApiClient, response: rest.RESTResponse, response_types_map: dict[str, str], expected_data: object
+) -> None:
+    await response.read()
+    assert api_client.response_deserialize(response, response_types_map).data == expected_data
 
 
 @pytest.mark.asyncio
@@ -315,50 +359,79 @@ async def test_response_deserialize_file_and_error(api_client: ApiClient) -> Non
         api_client.response_deserialize(below_200, {"1XX": "object"})
 
 
-def test_deserialize_supported_types(api_client: ApiClient) -> None:
-    assert api_client.deserialize("", "str", "application/json") == ""
-    assert api_client.deserialize('{"a": 1}', "object", None) == {"a": 1}
-    assert api_client.deserialize("plain", "str", None) == "plain"
-    assert api_client.deserialize("plain", "str", "text/plain") == "plain"
-    assert api_client.deserialize("1", "int", "application/json") == 1
-    assert api_client.deserialize('"2024-01-02"', "date", "application/json") == dt.date(2024, 1, 2)
+@pytest.mark.parametrize(
+    ("raw", "target_type", "content_type", "expected"),
+    [
+        pytest.param("", "str", "application/json", "", id="empty-str"),
+        pytest.param('{"a": 1}', "object", None, {"a": 1}, id="object"),
+        pytest.param("plain", "str", None, "plain", id="str-no-content-type"),
+        pytest.param("plain", "str", "text/plain", "plain", id="str-text-plain"),
+        pytest.param("1", "int", "application/json", 1, id="int"),
+        pytest.param('"2024-01-02"', "date", "application/json", dt.date(2024, 1, 2), id="date"),
+        pytest.param('"1.5"', "decimal", "application/json", decimal.Decimal("1.5"), id="decimal"),
+        pytest.param(
+            '"00000000-0000-0000-0000-000000000001"',
+            "UUID",
+            "application/json",
+            uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            id="uuid",
+        ),
+        pytest.param("true", "bool", "application/json", True, id="bool"),
+        pytest.param("1.5", "float", "application/json", 1.5, id="float"),
+        pytest.param('["1", "2"]', "List[int]", "application/json", [1, 2], id="list"),
+        pytest.param('{"a": "1"}', "Dict[str, int]", "application/json", {"a": 1}, id="dict"),
+    ],
+)
+def test_deserialize_supported_types(api_client: ApiClient, raw: str, target_type: str, content_type: str | None, expected: object) -> None:
+    assert api_client.deserialize(raw, target_type, content_type) == expected
+
+
+def test_deserialize_datetime_and_model(api_client: ApiClient) -> None:
     assert api_client.deserialize('"2024-01-02T03:04:05+00:00"', "datetime", "application/json").year == 2024
-    assert api_client.deserialize('"1.5"', "decimal", "application/json") == decimal.Decimal("1.5")
-    assert api_client.deserialize('"00000000-0000-0000-0000-000000000001"', "UUID", "application/json") == uuid.UUID(
-        "00000000-0000-0000-0000-000000000001"
-    )
-    assert api_client.deserialize("true", "bool", "application/json") is True
-    assert api_client.deserialize("1.5", "float", "application/json") == 1.5
-    assert api_client.deserialize('["1", "2"]', "List[int]", "application/json") == [1, 2]
-    assert api_client.deserialize('{"a": "1"}', "Dict[str, int]", "application/json") == {"a": 1}
     assert api_client.deserialize(
         json.dumps(api_client.sanitize_for_serialization(model_payload(AccountResponse))), "AccountResponse", "application/json"
     )
-    with pytest.raises(ApiException, match="Unsupported content type"):
-        api_client.deserialize("plain", "str", "application/xml")
-    with pytest.raises(AssertionError):
-        api_client.deserialize("[]", "List[", "application/json")
-    with pytest.raises(AssertionError):
-        api_client.deserialize("{}", "Dict[str]", "application/json")
-    with pytest.raises(rest.ApiException):
-        api_client.deserialize('"bad"', "date", "application/json")
-    with pytest.raises(rest.ApiException):
-        api_client.deserialize('"bad"', "datetime", "application/json")
-    with pytest.raises(rest.ApiException):
-        api_client.deserialize('"bad"', "AccountType", "application/json")
 
 
-def test_deserialize_private_edge_cases(api_client: ApiClient) -> None:
+@pytest.mark.parametrize(
+    ("raw", "target_type", "content_type", "exception_class", "match"),
+    [
+        pytest.param("plain", "str", "application/xml", ApiException, "Unsupported content type", id="unsupported-content-type"),
+        pytest.param("[]", "List[", "application/json", AssertionError, None, id="malformed-list-type"),
+        pytest.param("{}", "Dict[str]", "application/json", AssertionError, None, id="malformed-dict-type"),
+        pytest.param('"bad"', "date", "application/json", rest.ApiException, None, id="bad-date"),
+        pytest.param('"bad"', "datetime", "application/json", rest.ApiException, None, id="bad-datetime"),
+        pytest.param('"bad"', "AccountType", "application/json", rest.ApiException, None, id="bad-enum"),
+    ],
+)
+def test_deserialize_error_cases(
+    api_client: ApiClient, raw: str, target_type: str, content_type: str, exception_class: type[Exception], match: str | None
+) -> None:
+    with pytest.raises(exception_class, match=match):
+        api_client.deserialize(raw, target_type, content_type)
+
+
+@pytest.mark.parametrize(
+    ("value", "target_type", "expected"),
+    [
+        pytest.param(None, "str", None, id="none"),
+        pytest.param("1", int, 1, id="int"),
+        pytest.param({"a": 1}, object, {"a": 1}, id="object"),
+        pytest.param("2024-01-02", dt.date, dt.date(2024, 1, 2), id="date"),
+        pytest.param("1.5", decimal.Decimal, decimal.Decimal("1.5"), id="decimal"),
+        pytest.param("00000000-0000-0000-0000-000000000001", uuid.UUID, uuid.UUID("00000000-0000-0000-0000-000000000001"), id="uuid"),
+        pytest.param("checking", AccountType, AccountType.CHECKING, id="enum"),
+    ],
+)
+def test_deserialize_private_variants(api_client: ApiClient, value: object, target_type: object, expected: object) -> None:
+    deserialize = object.__getattribute__(api_client, "_ApiClient__deserialize")
+    assert deserialize(value, target_type) == expected
+
+
+def test_deserialize_private_datetime_and_primitive_fallback(api_client: ApiClient) -> None:
     deserialize = object.__getattribute__(api_client, "_ApiClient__deserialize")
     deserialize_primitive = object.__getattribute__(api_client, "_ApiClient__deserialize_primitive")
-    assert deserialize(None, "str") is None
-    assert deserialize("1", int) == 1
-    assert deserialize({"a": 1}, object) == {"a": 1}
-    assert deserialize("2024-01-02", dt.date) == dt.date(2024, 1, 2)
     assert deserialize("2024-01-02T03:04:05+00:00", dt.datetime).year == 2024
-    assert deserialize("1.5", decimal.Decimal) == decimal.Decimal("1.5")
-    assert deserialize("00000000-0000-0000-0000-000000000001", uuid.UUID) == uuid.UUID("00000000-0000-0000-0000-000000000001")
-    assert deserialize("checking", AccountType) == AccountType.CHECKING
     assert deserialize_primitive(object(), int)
     unicode_failure = Mock(side_effect=UnicodeEncodeError("utf-8", "x", 0, 1, "bad"))
     assert deserialize_primitive("x", unicode_failure) == "x"
