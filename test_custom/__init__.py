@@ -8,13 +8,13 @@ import inspect
 import pkgutil
 import types
 import uuid
+from typing import TYPE_CHECKING
 from typing import Annotated
 from typing import Any
+from typing import Protocol
+from typing import Union
 from typing import get_args
 from typing import get_origin
-from typing import Protocol
-from typing import TYPE_CHECKING
-from typing import Union
 
 from pydantic import BaseModel
 

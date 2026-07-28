@@ -175,6 +175,16 @@ class PlanDetail(BaseModel):
                 if _item_scheduled_subtransactions:
                     _items.append(_item_scheduled_subtransactions.to_dict())
             _dict['scheduled_subtransactions'] = _items
+        # set to None if date_format (nullable) is None
+        # and model_fields_set contains the field
+        if self.date_format is None and "date_format" in self.model_fields_set:
+            _dict['date_format'] = None
+
+        # set to None if currency_format (nullable) is None
+        # and model_fields_set contains the field
+        if self.currency_format is None and "currency_format" in self.model_fields_set:
+            _dict['currency_format'] = None
+
         return _dict
 
     @classmethod

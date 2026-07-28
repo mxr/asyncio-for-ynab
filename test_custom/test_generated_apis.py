@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import inspect
 from types import SimpleNamespace
-from typing import Any
 from typing import TYPE_CHECKING
+from typing import Any
+from typing import ClassVar
 
 import pytest
 
@@ -17,8 +18,8 @@ if TYPE_CHECKING:
 
 
 class FakeResponse:
+    headers: ClassVar[dict[str, str]] = {"content-type": "application/json"}
     status = 200
-    headers = {"content-type": "application/json"}
     data = b"{}"
     response = "raw-response"
 

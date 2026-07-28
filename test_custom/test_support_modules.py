@@ -27,10 +27,10 @@ from asyncio_for_ynab.exceptions import BadRequestException
 from asyncio_for_ynab.exceptions import ConflictException
 from asyncio_for_ynab.exceptions import ForbiddenException
 from asyncio_for_ynab.exceptions import NotFoundException
-from asyncio_for_ynab.exceptions import render_path
 from asyncio_for_ynab.exceptions import ServiceException
 from asyncio_for_ynab.exceptions import UnauthorizedException
 from asyncio_for_ynab.exceptions import UnprocessableEntityException
+from asyncio_for_ynab.exceptions import render_path
 from asyncio_for_ynab.models.account_response import AccountResponse
 from asyncio_for_ynab.models.account_response_data import AccountResponseData
 from asyncio_for_ynab.models.account_type import AccountType
@@ -211,7 +211,7 @@ def test_header_selection(api_client: ApiClient, method_name: str, accepts: list
         pytest.param(
             ["ignored"],
             {"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"},
-            {"Cookie": "abc"},
+            {"Cookie": 'sid="abc"'},
             [],
             id="request-auth-cookie",
         ),
@@ -243,6 +243,24 @@ def test_update_params_for_auth_variants(
     api_client.update_params_for_auth(headers, queries, auth_settings_names, "/", "GET", None, request_auth=request_auth)
     assert headers == expected_headers
     assert queries == expected_queries
+
+
+def test_update_params_for_auth_appends_and_reuses_quoted_cookie_values(api_client: ApiClient) -> None:
+    headers: dict[str, str] = {}
+    queries: list[tuple[str, str]] = []
+    api_client.update_params_for_auth(
+        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"}
+    )
+    api_client.update_params_for_auth(
+        headers,
+        queries,
+        ["ignored"],
+        "/",
+        "GET",
+        None,
+        request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'},
+    )
+    assert headers["Cookie"] == 'sid="abc"; csrf="already-quoted"'
 
 
 def test_update_params_for_auth_rejects_unsupported_location(api_client: ApiClient) -> None:
@@ -300,6 +318,7 @@ async def test_response_deserialize_requires_read(api_client: ApiClient) -> None
             "value",
             id="missing-content-type-header",
         ),
+        pytest.param(http_response(content=b'{"data": {"foo": "bar"}}'), {"default": "object"}, {"data": {"foo": "bar"}}, id="default-fallback"),
     ],
 )
 async def test_response_deserialize_success_variants(
@@ -458,6 +477,7 @@ def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
         log_file = tmp_path / "client.log"
         config.logger_file = str(log_file)
         config.debug = True
+        assert config.debug is True
         config.debug = False
         copied = config.__deepcopy__({})
         assert copied.host == config.host
