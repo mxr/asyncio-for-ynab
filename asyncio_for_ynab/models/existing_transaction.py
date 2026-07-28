@@ -43,7 +43,7 @@ class ExistingTransaction(BaseModel):
     cleared: Optional[TransactionClearedStatus] = None
     approved: Optional[StrictBool] = Field(default=None, description="Whether or not the transaction is approved.  If not supplied, transaction will be unapproved by default.")
     flag_color: Optional[TransactionFlagColor] = None
-    subtransactions: Optional[List[SaveSubTransaction]] = Field(default=None, description="An array of subtransactions to configure a transaction as a split. Updating `subtransactions` on an existing split transaction is not supported.")
+    subtransactions: Optional[List[SaveSubTransaction]] = Field(default=None, description="An array of subtransactions to configure a transaction as a split. Updating `subtransactions` on an existing split transaction is not supported and will return an error.  Splits are not allowed on tracking accounts or on transfers between on-budget accounts; a transfer to a tracking account can be a split.")
     __properties: ClassVar[List[str]] = ["account_id", "date", "amount", "payee_id", "payee_name", "category_id", "memo", "cleared", "approved", "flag_color", "subtransactions"]
 
     model_config = ConfigDict(
