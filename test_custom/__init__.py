@@ -43,9 +43,9 @@ def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[T]
         if not module_info.name.startswith("_"):
             module_ = importlib.import_module(f"{module.__name__}.{module_info.name}")
             for _, obj in inspect.getmembers(module_, inspect.isclass):
-                obj = cast("type[T]", obj)
-                if obj.__module__ == module_.__name__ and matcher(obj):
-                    classes.append(obj)
+                t = cast("type[T]", obj)
+                if t.__module__ == module_.__name__ and matcher(t):
+                    classes.append(t)
 
     return sorted(classes, key=lambda cls: cls.__name__)
 
