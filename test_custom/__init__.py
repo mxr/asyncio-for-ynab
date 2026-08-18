@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from typing import Annotated
 from typing import Any
 from typing import Protocol
+from typing import TypeVar
 from typing import Union
 from typing import cast
 from typing import get_args
@@ -33,12 +34,16 @@ class GeneratedApiClass(Protocol):
     def __init__(self, api_client: object | None = None) -> None: ...
 
 
-def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[object]], bool]) -> list[type[Any]]:
-    classes: list[type[Any]] = []
+T = TypeVar("T")
+
+
+def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[T]], bool]) -> list[type[T]]:
+    classes: list[type[T]] = []
     for module_info in pkgutil.iter_modules(module.__path__):
         if not module_info.name.startswith("_"):
             module_ = importlib.import_module(f"{module.__name__}.{module_info.name}")
             for _, obj in inspect.getmembers(module_, inspect.isclass):
+                obj = cast("type[T]", obj)
                 if obj.__module__ == module_.__name__ and matcher(obj):
                     classes.append(obj)
 
@@ -46,24 +51,15 @@ def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[ob
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
-    return cast(
-        "list[type[BaseModel]]",
-        _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel)),
-    )
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel))
 
 
 def iter_enum_classes() -> list[type[enum.Enum]]:
-    return cast(
-        "list[type[enum.Enum]]",
-        _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum)),
-    )
+    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum))
 
 
 def iter_api_classes() -> list[type[GeneratedApiClass]]:
-    return cast(
-        "list[type[GeneratedApiClass]]",
-        _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api")),
-    )
+    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api"))
 
 
 def _unwrap_annotation(annotation: Any) -> Any:
