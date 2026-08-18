@@ -13,6 +13,7 @@ from typing import Annotated
 from typing import Any
 from typing import Protocol
 from typing import Union
+from typing import cast
 from typing import get_args
 from typing import get_origin
 
@@ -45,15 +46,24 @@ def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[ob
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel))
+    return cast(
+        "list[type[BaseModel]]",
+        _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel)),
+    )
 
 
 def iter_enum_classes() -> list[type[enum.Enum]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum))
+    return cast(
+        "list[type[enum.Enum]]",
+        _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum)),
+    )
 
 
 def iter_api_classes() -> list[type[GeneratedApiClass]]:
-    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api"))
+    return cast(
+        "list[type[GeneratedApiClass]]",
+        _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api")),
+    )
 
 
 def _unwrap_annotation(annotation: Any) -> Any:
