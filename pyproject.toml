@@ -79,6 +79,11 @@ extend-select = [
 force-single-line = true
 required-imports = ["from __future__ import annotations"]
 
+[tool.ruff.lint.per-file-ignores]
+# asserts are fine in tests
+"test/**" = ["S101"]
+"test_custom/**" = ["S101"]
+
 [tool.setuptools.package-data]
 asyncio_for_ynab = ["py.typed"]
 
