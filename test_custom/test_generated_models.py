@@ -65,8 +65,8 @@ def test_generated_model_serialization_helpers(model_class: type[GeneratedModel]
         field_value = value_for_annotation(field.annotation)
         if isinstance(field_value, list):
             with subtests.test("list field", model=model_class.__name__, field=name):
-                list_model = model_class.model_construct(**dict.fromkeys(model_class.model_fields))
-                object.__setattr__(list_model, name, [None])
+                empty_list_model = model_class.model_construct(**dict.fromkeys(model_class.model_fields))
+                list_model = empty_list_model.model_copy(update={name: [None]})
                 assert list_model.to_dict() is not None
 
 

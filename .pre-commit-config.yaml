@@ -49,6 +49,7 @@ repos:
   hooks:
   - id: pyright
     additional_dependencies:
+    - pyright[nodejs]
     - aioresponses
     - coverage
     - httpx>=0.28.1
@@ -74,7 +75,7 @@ repos:
     - typing-extensions>=4.7.1
     language_version: python3.10
 - repo: https://github.com/mxr/sync-typing-deps
-  rev: 827c0d0f5b5dda0644170665034006604f9eb10b  # frozen: v0.6.0
+  rev: 1bfa6951b387da0db2f1739b45a5abffbab236de
   hooks:
   - id: sync-typing-deps
 - repo: https://github.com/pre-commit/mirrors-mypy
