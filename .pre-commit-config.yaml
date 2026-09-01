@@ -44,8 +44,8 @@ repos:
           config/.*\.ya?ml|
           templates/python/.*\.mustache
       )$
-- repo: https://github.com/RobertCraigie/pyright-python
-  rev: 392b6ba8e54be6d603e02e9f8d601d27b7a48d12  # frozen: v1.1.411
+- repo: https://github.com/mxr/pyright-python
+  rev: bundle-dist-on-source-install
   hooks:
   - id: pyright
     additional_dependencies:
