@@ -75,7 +75,8 @@ class CategoriesResponseData(BaseModel):
         _items = []
         if self.category_groups:
             for _item_category_groups in self.category_groups:
-                _items.append(_item_category_groups.to_dict() if _item_category_groups is not None else None)
+                if _item_category_groups:
+                    _items.append(_item_category_groups.to_dict())
             _dict['category_groups'] = _items
         return _dict
 

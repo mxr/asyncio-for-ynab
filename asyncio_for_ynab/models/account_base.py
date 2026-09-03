@@ -109,21 +109,6 @@ class AccountBase(BaseModel):
         if self.debt_original_balance is None and "debt_original_balance" in self.model_fields_set:
             _dict['debt_original_balance'] = None
 
-        # set to None if debt_interest_rates (nullable) is None
-        # and model_fields_set contains the field
-        if self.debt_interest_rates is None and "debt_interest_rates" in self.model_fields_set:
-            _dict['debt_interest_rates'] = None
-
-        # set to None if debt_minimum_payments (nullable) is None
-        # and model_fields_set contains the field
-        if self.debt_minimum_payments is None and "debt_minimum_payments" in self.model_fields_set:
-            _dict['debt_minimum_payments'] = None
-
-        # set to None if debt_escrow_amounts (nullable) is None
-        # and model_fields_set contains the field
-        if self.debt_escrow_amounts is None and "debt_escrow_amounts" in self.model_fields_set:
-            _dict['debt_escrow_amounts'] = None
-
         return _dict
 
     @classmethod

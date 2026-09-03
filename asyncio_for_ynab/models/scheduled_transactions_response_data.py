@@ -75,7 +75,8 @@ class ScheduledTransactionsResponseData(BaseModel):
         _items = []
         if self.scheduled_transactions:
             for _item_scheduled_transactions in self.scheduled_transactions:
-                _items.append(_item_scheduled_transactions.to_dict() if _item_scheduled_transactions is not None else None)
+                if _item_scheduled_transactions:
+                    _items.append(_item_scheduled_transactions.to_dict())
             _dict['scheduled_transactions'] = _items
         return _dict
 

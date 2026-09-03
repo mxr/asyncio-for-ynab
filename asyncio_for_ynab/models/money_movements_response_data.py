@@ -75,7 +75,8 @@ class MoneyMovementsResponseData(BaseModel):
         _items = []
         if self.money_movements:
             for _item_money_movements in self.money_movements:
-                _items.append(_item_money_movements.to_dict() if _item_money_movements is not None else None)
+                if _item_money_movements:
+                    _items.append(_item_money_movements.to_dict())
             _dict['money_movements'] = _items
         return _dict
 

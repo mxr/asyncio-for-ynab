@@ -91,7 +91,8 @@ class MonthDetail(BaseModel):
         _items = []
         if self.categories:
             for _item_categories in self.categories:
-                _items.append(_item_categories.to_dict() if _item_categories is not None else None)
+                if _item_categories:
+                    _items.append(_item_categories.to_dict())
             _dict['categories'] = _items
         return _dict
 

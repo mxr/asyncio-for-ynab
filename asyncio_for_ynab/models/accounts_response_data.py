@@ -75,7 +75,8 @@ class AccountsResponseData(BaseModel):
         _items = []
         if self.accounts:
             for _item_accounts in self.accounts:
-                _items.append(_item_accounts.to_dict() if _item_accounts is not None else None)
+                if _item_accounts:
+                    _items.append(_item_accounts.to_dict())
             _dict['accounts'] = _items
         return _dict
 

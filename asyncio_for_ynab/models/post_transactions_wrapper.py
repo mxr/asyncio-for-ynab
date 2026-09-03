@@ -78,7 +78,8 @@ class PostTransactionsWrapper(BaseModel):
         _items = []
         if self.transactions:
             for _item_transactions in self.transactions:
-                _items.append(_item_transactions.to_dict() if _item_transactions is not None else None)
+                if _item_transactions:
+                    _items.append(_item_transactions.to_dict())
             _dict['transactions'] = _items
         return _dict
 

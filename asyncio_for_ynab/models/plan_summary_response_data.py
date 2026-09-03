@@ -75,7 +75,8 @@ class PlanSummaryResponseData(BaseModel):
         _items = []
         if self.plans:
             for _item_plans in self.plans:
-                _items.append(_item_plans.to_dict() if _item_plans is not None else None)
+                if _item_plans:
+                    _items.append(_item_plans.to_dict())
             _dict['plans'] = _items
         # override the default output from pydantic by calling `to_dict()` of default_plan
         if self.default_plan:
