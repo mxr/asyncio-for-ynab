@@ -163,6 +163,19 @@ def test_parameters_to_tuples_collection_formats(api_client: ApiClient, collecti
 
 
 @pytest.mark.parametrize(
+    ("params", "collection_formats", "expected"),
+    [
+        pytest.param({"n": True}, None, [("n", "true")], id="scalar-bool"),
+        pytest.param({"k": [True, False]}, {"k": "multi"}, [("k", "true"), ("k", "false")], id="multi-bool"),
+    ],
+)
+def test_parameters_to_tuples_lowercases_bools(
+    api_client: ApiClient, params: dict[str, object], collection_formats: dict[str, str] | None, expected: list[tuple[str, str]]
+) -> None:
+    assert api_client.parameters_to_tuples(params, collection_formats) == expected
+
+
+@pytest.mark.parametrize(
     ("collection_format", "expected"),
     [
         pytest.param("multi", "k=a&k=b", id="multi"),
@@ -421,6 +434,7 @@ def test_deserialize_error_cases(
         pytest.param("1.5", decimal.Decimal, decimal.Decimal("1.5"), id="decimal"),
         pytest.param("00000000-0000-0000-0000-000000000001", uuid.UUID, uuid.UUID("00000000-0000-0000-0000-000000000001"), id="uuid"),
         pytest.param("checking", AccountType, AccountType.CHECKING, id="enum"),
+        pytest.param("1", "Optional[int]", 1, id="optional"),
     ],
 )
 def test_deserialize_private_variants(api_client: ApiClient, value: object, target_type: object, expected: object) -> None:
