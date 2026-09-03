@@ -91,8 +91,7 @@ class PlanSummary(BaseModel):
         _items = []
         if self.accounts:
             for _item_accounts in self.accounts:
-                if _item_accounts:
-                    _items.append(_item_accounts.to_dict())
+                _items.append(_item_accounts.to_dict() if _item_accounts is not None else None)
             _dict['accounts'] = _items
         # set to None if date_format (nullable) is None
         # and model_fields_set contains the field

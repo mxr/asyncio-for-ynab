@@ -22,7 +22,7 @@ repos:
     args: [--autofix]
     exclude: config/spec.yaml
 - repo: https://github.com/mxr/mirrors-openapi-generator-cli
-  rev: e18b9ac0d2dd7fb1795dccab884353774e68fb5a  # frozen: v7.24.0
+  rev: b6ce956d43315dba7c704f89f72963bdfd7c38b8  # frozen: v7.25.0
   hooks:
   - id: openapi-generator-cli
     alias: openapi-validate
