@@ -211,7 +211,7 @@ def test_header_selection(api_client: ApiClient, method_name: str, accepts: list
         pytest.param(
             ["ignored"],
             {"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"},
-            {"Cookie": 'sid="abc"'},
+            {"Cookie": "sid=abc"},
             [],
             id="request-auth-cookie",
         ),
@@ -245,7 +245,7 @@ def test_update_params_for_auth_variants(
     assert queries == expected_queries
 
 
-def test_update_params_for_auth_appends_and_reuses_quoted_cookie_values(api_client: ApiClient) -> None:
+def test_update_params_for_auth_appends_and_quotes_cookie_values(api_client: ApiClient) -> None:
     headers: dict[str, str] = {}
     queries: list[tuple[str, str]] = []
     api_client.update_params_for_auth(
@@ -260,7 +260,7 @@ def test_update_params_for_auth_appends_and_reuses_quoted_cookie_values(api_clie
         None,
         request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'},
     )
-    assert headers["Cookie"] == 'sid="abc"; csrf="already-quoted"'
+    assert headers["Cookie"] == "sid=abc; csrf=%22already-quoted%22"
 
 
 def test_update_params_for_auth_rejects_unsupported_location(api_client: ApiClient) -> None:
