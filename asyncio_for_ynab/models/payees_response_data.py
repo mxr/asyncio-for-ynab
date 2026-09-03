@@ -75,8 +75,7 @@ class PayeesResponseData(BaseModel):
         _items = []
         if self.payees:
             for _item_payees in self.payees:
-                if _item_payees:
-                    _items.append(_item_payees.to_dict())
+                _items.append(_item_payees.to_dict() if _item_payees is not None else None)
             _dict['payees'] = _items
         return _dict
 

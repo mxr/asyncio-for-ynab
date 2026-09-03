@@ -90,8 +90,7 @@ class NewTransaction(BaseModel):
         _items = []
         if self.subtransactions:
             for _item_subtransactions in self.subtransactions:
-                if _item_subtransactions:
-                    _items.append(_item_subtransactions.to_dict())
+                _items.append(_item_subtransactions.to_dict() if _item_subtransactions is not None else None)
             _dict['subtransactions'] = _items
         # set to None if flag_color (nullable) is None
         # and model_fields_set contains the field
