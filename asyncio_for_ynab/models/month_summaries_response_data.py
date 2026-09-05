@@ -75,8 +75,7 @@ class MonthSummariesResponseData(BaseModel):
         _items = []
         if self.months:
             for _item_months in self.months:
-                if _item_months:
-                    _items.append(_item_months.to_dict())
+                _items.append(_item_months.to_dict() if _item_months is not None else None)
             _dict['months'] = _items
         return _dict
 
