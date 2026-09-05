@@ -45,7 +45,7 @@ repos:
           templates/python/.*\.mustache
       )$
 - repo: https://github.com/mxr/mirrors-pyright
-  rev: 53794ee30bfe4592c28ae1296a049d20193a00f4  # frozen: v1.1.412
+  rev: 789d36e40263da0e4d83395ed125b03a3a0e2c5f  # frozen: v1.1.412
   hooks:
   - id: pyright
     additional_dependencies:
@@ -74,7 +74,7 @@ repos:
     - typing-extensions>=4.7.1
     language_version: python3.10
 - repo: https://github.com/mxr/sync-typing-deps
-  rev: 827c0d0f5b5dda0644170665034006604f9eb10b  # frozen: v0.6.0
+  rev: 896a112838d434d8e607d4d636323c5914ab933f  # frozen: v0.7.0
   hooks:
   - id: sync-typing-deps
 - repo: https://github.com/pre-commit/mirrors-mypy
