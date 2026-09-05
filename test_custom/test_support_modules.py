@@ -291,7 +291,9 @@ def test_sanitize_for_serialization_handles_supported_values(api_client: ApiClie
     assert api_client.sanitize_for_serialization(uuid.UUID("00000000-0000-0000-0000-000000000001")) == "00000000-0000-0000-0000-000000000001"
     assert api_client.sanitize_for_serialization(["x", dt.date(2024, 1, 2)]) == ["x", "2024-01-02"]
     assert api_client.sanitize_for_serialization((dt.date(2024, 1, 2), decimal.Decimal("1.5"))) == ("2024-01-02", "1.5")
-    assert api_client.sanitize_for_serialization(account_response)["data"]
+    sanitized_account_response = api_client.sanitize_for_serialization(account_response)
+    assert isinstance(sanitized_account_response, dict)
+    assert sanitized_account_response["data"]
     assert api_client.sanitize_for_serialization(ObjectWithDict()) == {"value": 1}
     assert api_client.sanitize_for_serialization(ObjectWithListDict()) == [{"value": "yes"}]
 
@@ -400,7 +402,9 @@ def test_deserialize_supported_types(api_client: ApiClient, raw: str, target_typ
 
 
 def test_deserialize_datetime_and_model(api_client: ApiClient) -> None:
-    assert api_client.deserialize('"2024-01-02T03:04:05+00:00"', "datetime", "application/json").year == 2024
+    deserialized_datetime = api_client.deserialize('"2024-01-02T03:04:05+00:00"', "datetime", "application/json")
+    assert isinstance(deserialized_datetime, dt.datetime)
+    assert deserialized_datetime.year == 2024
     assert api_client.deserialize(
         json.dumps(api_client.sanitize_for_serialization(model_payload(AccountResponse))), "AccountResponse", "application/json"
     )
@@ -478,7 +482,9 @@ def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
         assert config.get_api_key_with_prefix("none") is None
         assert refreshed_configs == [config, config, config]
         assert config.get_basic_auth_token() == "Basic dXNlcjpwYXNz"
-        assert config.auth_settings()["bearer"]["value"] == "Bearer access"
+        bearer_auth_setting = config.auth_settings().get("bearer")
+        assert bearer_auth_setting is not None
+        assert bearer_auth_setting["value"] == "Bearer access"
         assert "Python SDK Debug Report" in config.to_debug_report()
         assert config.logger_format == "%(asctime)s %(levelname)s %(message)s"
         config.host = "https://custom.example"

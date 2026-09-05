@@ -8,7 +8,7 @@ exclude: |
 
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 1f1e8bf348ff38fc88619a38d3ca4d9c56abea49  # frozen: v0.16.5
+  rev: 321478e58f4938179c6b86e4ddfa923d1547a49b  # frozen: v0.16.6
   hooks:
   - id: ruff-check
     args: [--fix]
@@ -44,8 +44,22 @@ repos:
           config/.*\.ya?ml|
           templates/python/.*\.mustache
       )$
+- repo: https://github.com/mxr/mirrors-pyright
+  rev: 789d36e40263da0e4d83395ed125b03a3a0e2c5f  # frozen: v1.1.412
+  hooks:
+  - id: pyright
+    additional_dependencies:
+    - aioresponses
+    - coverage
+    - httpx>=0.28.1
+    - pydantic>=2.11
+    - pytest
+    - pytest-asyncio
+    - types-python-dateutil
+    - types-setuptools
+    - typing-extensions>=4.7.1
 - repo: https://github.com/mxr/mirrors-ty
-  rev: 429804df3fe7b725a9a36f196e9a5390c9f12cd3  # frozen: v0.0.76
+  rev: fdf5987c0856f51fc20614b56761196b31483ae1  # frozen: v0.0.78
   hooks:
   - id: ty
     additional_dependencies:
@@ -60,7 +74,7 @@ repos:
     - typing-extensions>=4.7.1
     language_version: python3.10
 - repo: https://github.com/mxr/sync-typing-deps
-  rev: 827c0d0f5b5dda0644170665034006604f9eb10b  # frozen: v0.6.0
+  rev: 896a112838d434d8e607d4d636323c5914ab933f  # frozen: v0.7.0
   hooks:
   - id: sync-typing-deps
 - repo: https://github.com/pre-commit/mirrors-mypy
