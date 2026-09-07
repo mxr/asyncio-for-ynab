@@ -45,7 +45,7 @@ repos:
           templates/python/.*\.mustache
       )$
 - repo: https://github.com/mxr/mirrors-pyright
-  rev: 789d36e40263da0e4d83395ed125b03a3a0e2c5f  # frozen: v1.1.412
+  rev: 89ead1aa9974c0da927f2c2cc6a435f2ce8767fd  # frozen: v1.1.413
   hooks:
   - id: pyright
     additional_dependencies:
