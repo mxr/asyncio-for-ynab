@@ -87,9 +87,11 @@ tox -e py
 
 ## Versioning
 
-Package versions mirror the YNAB API spec version. For example, spec `1.83.0` is published as `asyncio-for-ynab==1.83.0`.
+Package versions mirror the YNAB API spec version. For example, spec `1.83.0` is published as
+`asyncio-for-ynab==1.83.0`.
 
-Sometimes YNAB updates the spec without raising the version (for example, documentation updates). Releases are not created in this case. Install from `main` to pull in these changes.
+Sometimes YNAB updates the spec without raising the version (for example, documentation updates). Releases are not
+created in this case. Install from `main` to pull in these changes.
 
 ## Changelog / Release Notes
 
