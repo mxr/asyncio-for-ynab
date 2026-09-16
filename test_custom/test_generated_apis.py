@@ -28,33 +28,59 @@ class FakeResponse:
 
 
 class FakeApiClient:
-    def __init__(self, *, default_content_type: str | None = "application/json") -> None:
+    def __init__(
+        self, *, default_content_type: str | None = "application/json"
+    ) -> None:
         self.calls: list[dict[str, Any]] = []
         self.configuration = SimpleNamespace(date_format="%Y-%m-%d")
         self.default_content_type = default_content_type
 
     def select_header_accept(self, accepts: list[str]) -> str | None:
-        return "application/json" if "application/json" in accepts else accepts[0] if accepts else None
+        return (
+            "application/json"
+            if "application/json" in accepts
+            else accepts[0]
+            if accepts
+            else None
+        )
 
     def select_header_content_type(self, content_types: list[str]) -> str | None:
         return self.default_content_type if content_types else None
 
-    def param_serialize(self, **kwargs: Any) -> tuple[str, str, dict[str, str], Any, list[Any]]:
+    def param_serialize(
+        self, **kwargs: Any
+    ) -> tuple[str, str, dict[str, str], Any, list[Any]]:
         self.calls.append(kwargs)
-        return kwargs["method"], "https://example.invalid" + kwargs["resource_path"], kwargs["header_params"], kwargs["body"], kwargs["post_params"]
+        return (
+            kwargs["method"],
+            "https://example.invalid" + kwargs["resource_path"],
+            kwargs["header_params"],
+            kwargs["body"],
+            kwargs["post_params"],
+        )
 
     async def call_api(self, *args: Any, **kwargs: Any) -> FakeResponse:
         self.calls.append({"call_api": args, **kwargs})
         return FakeResponse()
 
-    def response_deserialize(self, response_data: FakeResponse, response_types_map: dict[str, str | None]) -> ApiResponse[Any]:
+    def response_deserialize(
+        self, response_data: FakeResponse, response_types_map: dict[str, str | None]
+    ) -> ApiResponse[Any]:
         self.calls.append({"response_deserialize": response_types_map})
         return ApiResponse(
-            status_code=response_data.status, data=SimpleNamespace(ok=True), headers=response_data.headers, raw_data=response_data.data
+            status_code=response_data.status,
+            data=SimpleNamespace(ok=True),
+            headers=response_data.headers,
+            raw_data=response_data.data,
         )
 
 
-def _method_arguments(method: Callable[..., object], *, include_optional: bool = True, include_private: bool = False) -> dict[str, object]:
+def _method_arguments(
+    method: Callable[..., object],
+    *,
+    include_optional: bool = True,
+    include_private: bool = False,
+) -> dict[str, object]:
     signature = inspect.signature(method)
     arguments: dict[str, object] = {}
     for name, parameter in signature.parameters.items():
@@ -70,25 +96,39 @@ def _method_arguments(method: Callable[..., object], *, include_optional: bool =
             arguments[name] = 0
         elif name == "_request_timeout":
             arguments[name] = None
-        elif not name.startswith("_") and (include_optional or parameter.default is inspect.Parameter.empty):
+        elif not name.startswith("_") and (
+            include_optional or parameter.default is inspect.Parameter.empty
+        ):
             arguments[name] = value_for_parameter(name, parameter.annotation)
     return arguments
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-async def test_generated_api_methods_serialize_and_call(api_class: type[GeneratedApiClass], subtests: pytest.Subtests) -> None:
+async def test_generated_api_methods_serialize_and_call(
+    api_class: type[GeneratedApiClass], subtests: pytest.Subtests
+) -> None:
     api = api_class(FakeApiClient())
-    methods = [method for name, method in inspect.getmembers(api, inspect.ismethod) if not name.startswith("_")]
+    methods = [
+        method
+        for name, method in inspect.getmembers(api, inspect.ismethod)
+        if not name.startswith("_")
+    ]
 
     for method in methods:
-        with subtests.test("all arguments", api=api_class.__name__, method=method.__name__):
+        with subtests.test(
+            "all arguments", api=api_class.__name__, method=method.__name__
+        ):
             result = await method(**_method_arguments(method))
             assert result
-        with subtests.test("required arguments", api=api_class.__name__, method=method.__name__):
+        with subtests.test(
+            "required arguments", api=api_class.__name__, method=method.__name__
+        ):
             result = await method(**_method_arguments(method, include_optional=False))
             assert result
-        with subtests.test("private arguments", api=api_class.__name__, method=method.__name__):
+        with subtests.test(
+            "private arguments", api=api_class.__name__, method=method.__name__
+        ):
             result = await method(**_method_arguments(method, include_private=True))
             assert result
 
@@ -99,7 +139,11 @@ async def test_generated_api_methods_serialize_and_call(api_class: type[Generate
             if name.startswith("_get_transactions") and name.endswith("_serialize")
         ]
         for serializer in serializers:
-            with subtests.test("invalid since_date", api=api_class.__name__, serializer=serializer.__name__):
+            with subtests.test(
+                "invalid since_date",
+                api=api_class.__name__,
+                serializer=serializer.__name__,
+            ):
                 arguments = _method_arguments(serializer, include_private=True)
                 if "since_date" in arguments:  # pragma: no branch
                     arguments["since_date"] = "not-a-date"
@@ -107,21 +151,35 @@ async def test_generated_api_methods_serialize_and_call(api_class: type[Generate
 
 
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-def test_generated_api_serializers_handle_absent_default_content_type(api_class: type[GeneratedApiClass], subtests: pytest.Subtests) -> None:
+def test_generated_api_serializers_handle_absent_default_content_type(
+    api_class: type[GeneratedApiClass], subtests: pytest.Subtests
+) -> None:
     api = api_class(FakeApiClient(default_content_type=None))
-    serializers = [method for name, method in inspect.getmembers(api, inspect.ismethod) if name.endswith("_serialize")]
+    serializers = [
+        method
+        for name, method in inspect.getmembers(api, inspect.ismethod)
+        if name.endswith("_serialize")
+    ]
 
     for serializer in serializers:
         with subtests.test(api=api_class.__name__, serializer=serializer.__name__):
-            arguments = _method_arguments(serializer, include_optional=False, include_private=True)
+            arguments = _method_arguments(
+                serializer, include_optional=False, include_private=True
+            )
             arguments["_content_type"] = None
             serializer(**arguments)
 
 
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
-def test_generated_api_serializers_handle_absent_params(api_class: type[GeneratedApiClass], subtests: pytest.Subtests) -> None:
+def test_generated_api_serializers_handle_absent_params(
+    api_class: type[GeneratedApiClass], subtests: pytest.Subtests
+) -> None:
     api = api_class(FakeApiClient())
-    serializers = [method for name, method in inspect.getmembers(api, inspect.ismethod) if name.endswith("_serialize")]
+    serializers = [
+        method
+        for name, method in inspect.getmembers(api, inspect.ismethod)
+        if name.endswith("_serialize")
+    ]
 
     for serializer in serializers:
         with subtests.test(api=api_class.__name__, serializer=serializer.__name__):

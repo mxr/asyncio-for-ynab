@@ -37,7 +37,9 @@ class GeneratedApiClass(Protocol):
 T = TypeVar("T")
 
 
-def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[T]], bool]) -> list[type[T]]:
+def _iter_generated_classes(
+    module: types.ModuleType, matcher: Callable[[type[T]], bool]
+) -> list[type[T]]:
     classes: list[type[T]] = []
     for module_info in pkgutil.iter_modules(module.__path__):
         if not module_info.name.startswith("_"):
@@ -51,15 +53,21 @@ def _iter_generated_classes(module: types.ModuleType, matcher: Callable[[type[T]
 
 
 def iter_model_classes() -> list[type[BaseModel]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel))
+    return _iter_generated_classes(
+        asyncio_for_ynab.models, lambda obj: issubclass(obj, BaseModel)
+    )
 
 
 def iter_enum_classes() -> list[type[enum.Enum]]:
-    return _iter_generated_classes(asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum))
+    return _iter_generated_classes(
+        asyncio_for_ynab.models, lambda obj: issubclass(obj, enum.Enum)
+    )
 
 
 def iter_api_classes() -> list[type[GeneratedApiClass]]:
-    return _iter_generated_classes(asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api"))
+    return _iter_generated_classes(
+        asyncio_for_ynab.api, lambda obj: obj.__name__.endswith("Api")
+    )
 
 
 def _unwrap_annotation(annotation: Any) -> Any:
@@ -92,7 +100,11 @@ def value_for_annotation(annotation: Any) -> Any:
     if origin is dict:
         return {"key": value_for_annotation(get_args(annotation)[1])}
     if origin is tuple:
-        return tuple(value_for_annotation(arg) for arg in get_args(annotation) if arg is not Ellipsis)
+        return tuple(
+            value_for_annotation(arg)
+            for arg in get_args(annotation)
+            if arg is not Ellipsis
+        )
 
     if annotation in (str, Any):
         return "value"
@@ -138,11 +150,22 @@ def value_for_field(name: str, annotation: Any) -> Any:
 
 
 def model_payload(model_class: type[BaseModel]) -> dict[str, Any]:
-    return {field.alias or name: value_for_field(name, field.annotation) for name, field in model_class.model_fields.items()}
+    return {
+        field.alias or name: value_for_field(name, field.annotation)
+        for name, field in model_class.model_fields.items()
+    }
 
 
 def value_for_parameter(name: str, annotation: Any) -> Any:
-    if name.endswith("_id") or name in {"id", "plan_id", "budget_id", "account_id", "category_id", "payee_id", "transaction_id"}:
+    if name.endswith("_id") or name in {
+        "id",
+        "plan_id",
+        "budget_id",
+        "account_id",
+        "category_id",
+        "payee_id",
+        "transaction_id",
+    }:
         return TEST_UUID
     if name == "month":
         return "2024-01-01"

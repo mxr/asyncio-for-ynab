@@ -60,19 +60,36 @@ def configuration(tmp_path: Path) -> Configuration:
 
 @pytest.fixture
 def api_client(configuration: Configuration) -> ApiClient:
-    return ApiClient(configuration=configuration, header_name="X-Test", header_value="yes", cookie="session=1")
+    return ApiClient(
+        configuration=configuration,
+        header_name="X-Test",
+        header_value="yes",
+        cookie="session=1",
+    )
 
 
-def http_response(status: int = 200, content: bytes = b"{}", headers: dict[str, str] | None = None) -> rest.RESTResponse:
+def http_response(
+    status: int = 200, content: bytes = b"{}", headers: dict[str, str] | None = None
+) -> rest.RESTResponse:
     response = httpx.Response(
-        status, content=content, headers=headers or {"content-type": "application/json"}, request=httpx.Request("GET", "https://api.example")
+        status,
+        content=content,
+        headers=headers or {"content-type": "application/json"},
+        request=httpx.Request("GET", "https://api.example"),
     )
     return rest.RESTResponse(response)
 
 
 @pytest.mark.asyncio
-async def test_api_client_defaults_headers_and_context_manager(configuration: Configuration) -> None:
-    client = ApiClient(configuration=configuration, header_name="X-Token", header_value="value", cookie="cookie=value")
+async def test_api_client_defaults_headers_and_context_manager(
+    configuration: Configuration,
+) -> None:
+    client = ApiClient(
+        configuration=configuration,
+        header_name="X-Token",
+        header_value="value",
+        cookie="cookie=value",
+    )
     with patch.object(client.rest_client, "close", autospec=True) as close:
         assert client.user_agent == client.default_headers["User-Agent"]
         client.user_agent = "custom-agent"
@@ -95,14 +112,21 @@ def test_api_client_default_singleton(configuration: Configuration) -> None:
         ApiClient.set_default(previous)
 
 
-def test_param_serialize_formats_all_request_parts(api_client: ApiClient, tmp_path: Path) -> None:
+def test_param_serialize_formats_all_request_parts(
+    api_client: ApiClient, tmp_path: Path
+) -> None:
     upload = tmp_path / "upload.txt"
     upload.write_text("hello")
     method, url, headers, body, post_params = api_client.param_serialize(
         "POST",
         "/plans/{plan_id}/items",
         path_params={"plan_id": "a/b"},
-        query_params={"flag": True, "count": 2, "payload": {"a": 1}, "tags": ["a", "b"]},
+        query_params={
+            "flag": True,
+            "count": 2,
+            "payload": {"a": 1},
+            "tags": ["a", "b"],
+        },
         header_params={"X-Header": ["a", "b"]},
         body={"when": dt.date(2024, 1, 2), "amount": decimal.Decimal("1.5")},
         post_params={"form": ["x", "y"]},
@@ -143,8 +167,13 @@ def test_param_serialize_handles_empty_parts(configuration: Configuration) -> No
     assert post_params is None
 
     configuration.ignore_operation_servers = True
-    assert client.param_serialize("GET", "/items", _host="https://ignored.example")[1] == "https://api.example/items"
-    assert client.param_serialize("POST", "/items", post_params={"a": ["b", "c"]}, collection_formats={"a": "csv"})[4] == [("a", "b,c")]
+    assert (
+        client.param_serialize("GET", "/items", _host="https://ignored.example")[1]
+        == "https://api.example/items"
+    )
+    assert client.param_serialize(
+        "POST", "/items", post_params={"a": ["b", "c"]}, collection_formats={"a": "csv"}
+    )[4] == [("a", "b,c")]
 
 
 @pytest.mark.parametrize(
@@ -157,8 +186,13 @@ def test_param_serialize_handles_empty_parts(configuration: Configuration) -> No
         pytest.param("csv", [("k", "a,b")], id="csv"),
     ],
 )
-def test_parameters_to_tuples_collection_formats(api_client: ApiClient, collection_format: str, expected: list[tuple[str, str]]) -> None:
-    assert api_client.parameters_to_tuples({"k": ["a", "b"]}, {"k": collection_format}) == expected
+def test_parameters_to_tuples_collection_formats(
+    api_client: ApiClient, collection_format: str, expected: list[tuple[str, str]]
+) -> None:
+    assert (
+        api_client.parameters_to_tuples({"k": ["a", "b"]}, {"k": collection_format})
+        == expected
+    )
     assert api_client.parameters_to_tuples({"n": "v"}, None) == [("n", "v")]
 
 
@@ -166,11 +200,19 @@ def test_parameters_to_tuples_collection_formats(api_client: ApiClient, collecti
     ("params", "collection_formats", "expected"),
     [
         pytest.param({"n": True}, None, [("n", "true")], id="scalar-bool"),
-        pytest.param({"k": [True, False]}, {"k": "multi"}, [("k", "true"), ("k", "false")], id="multi-bool"),
+        pytest.param(
+            {"k": [True, False]},
+            {"k": "multi"},
+            [("k", "true"), ("k", "false")],
+            id="multi-bool",
+        ),
     ],
 )
 def test_parameters_to_tuples_lowercases_bools(
-    api_client: ApiClient, params: dict[str, object], collection_formats: dict[str, str] | None, expected: list[tuple[str, str]]
+    api_client: ApiClient,
+    params: dict[str, object],
+    collection_formats: dict[str, str] | None,
+    expected: list[tuple[str, str]],
 ) -> None:
     assert api_client.parameters_to_tuples(params, collection_formats) == expected
 
@@ -185,16 +227,30 @@ def test_parameters_to_tuples_lowercases_bools(
         pytest.param("csv", "k=a,b", id="csv"),
     ],
 )
-def test_parameters_to_url_query_collection_formats(api_client: ApiClient, collection_format: str, expected: str) -> None:
-    assert api_client.parameters_to_url_query({"k": ["a", "b"]}, {"k": collection_format}) == expected
+def test_parameters_to_url_query_collection_formats(
+    api_client: ApiClient, collection_format: str, expected: str
+) -> None:
+    assert (
+        api_client.parameters_to_url_query({"k": ["a", "b"]}, {"k": collection_format})
+        == expected
+    )
     assert api_client.parameters_to_url_query({"n": 1}, None) == "n=1"
 
 
-def test_files_parameters_accept_supported_shapes(api_client: ApiClient, tmp_path: Path) -> None:
+def test_files_parameters_accept_supported_shapes(
+    api_client: ApiClient, tmp_path: Path
+) -> None:
     upload = tmp_path / "upload.txt"
     upload.write_text("hello")
     files_parameters = object.__getattribute__(api_client, "files_parameters")
-    params = files_parameters({"path": str(upload), "bytes": b"bytes", "tuple": ("name.txt", b"tuple"), "list": [b"one", ("two.txt", b"two")]})
+    params = files_parameters(
+        {
+            "path": str(upload),
+            "bytes": b"bytes",
+            "tuple": ("name.txt", b"tuple"),
+            "list": [b"one", ("two.txt", b"two")],
+        }
+    )
     assert [name for name, _ in params] == ["path", "bytes", "tuple", "list", "list"]
     with pytest.raises(ValueError, match="Unsupported file value"):
         files_parameters({"bad": object()})
@@ -204,14 +260,33 @@ def test_files_parameters_accept_supported_shapes(api_client: ApiClient, tmp_pat
     ("method_name", "accepts", "expected"),
     [
         pytest.param("select_header_accept", [], None, id="accept-empty"),
-        pytest.param("select_header_accept", ["text/plain", "application/json"], "application/json", id="accept-prefers-json"),
-        pytest.param("select_header_accept", ["text/plain"], "text/plain", id="accept-single"),
+        pytest.param(
+            "select_header_accept",
+            ["text/plain", "application/json"],
+            "application/json",
+            id="accept-prefers-json",
+        ),
+        pytest.param(
+            "select_header_accept", ["text/plain"], "text/plain", id="accept-single"
+        ),
         pytest.param("select_header_content_type", [], None, id="content-type-empty"),
-        pytest.param("select_header_content_type", ["text/plain", "application/json"], "application/json", id="content-type-prefers-json"),
-        pytest.param("select_header_content_type", ["text/plain"], "text/plain", id="content-type-single"),
+        pytest.param(
+            "select_header_content_type",
+            ["text/plain", "application/json"],
+            "application/json",
+            id="content-type-prefers-json",
+        ),
+        pytest.param(
+            "select_header_content_type",
+            ["text/plain"],
+            "text/plain",
+            id="content-type-single",
+        ),
     ],
 )
-def test_header_selection(api_client: ApiClient, method_name: str, accepts: list[str], expected: str | None) -> None:
+def test_header_selection(
+    api_client: ApiClient, method_name: str, accepts: list[str], expected: str | None
+) -> None:
     assert getattr(api_client, method_name)(accepts) == expected
 
 
@@ -219,7 +294,13 @@ def test_header_selection(api_client: ApiClient, method_name: str, accepts: list
     ("auth_settings_names", "request_auth", "expected_headers", "expected_queries"),
     [
         pytest.param([], None, {}, [], id="no-auth"),
-        pytest.param(["bearer"], None, {"Authorization": "Bearer token"}, [], id="configured-bearer"),
+        pytest.param(
+            ["bearer"],
+            None,
+            {"Authorization": "Bearer token"},
+            [],
+            id="configured-bearer",
+        ),
         pytest.param(["missing"], None, {}, [], id="unconfigured-scheme-is-noop"),
         pytest.param(
             ["ignored"],
@@ -237,7 +318,12 @@ def test_header_selection(api_client: ApiClient, method_name: str, accepts: list
         ),
         pytest.param(
             ["ignored"],
-            {"type": "http-signature", "in": "header", "key": "Signature", "value": "skip"},
+            {
+                "type": "http-signature",
+                "in": "header",
+                "key": "Signature",
+                "value": "skip",
+            },
             {},
             [],
             id="request-auth-http-signature-skipped",
@@ -253,16 +339,32 @@ def test_update_params_for_auth_variants(
 ) -> None:
     headers: dict[str, str] = {}
     queries: list[tuple[str, str]] = []
-    api_client.update_params_for_auth(headers, queries, auth_settings_names, "/", "GET", None, request_auth=request_auth)
+    api_client.update_params_for_auth(
+        headers,
+        queries,
+        auth_settings_names,
+        "/",
+        "GET",
+        None,
+        request_auth=request_auth,
+    )
     assert headers == expected_headers
     assert queries == expected_queries
 
 
-def test_update_params_for_auth_appends_and_quotes_cookie_values(api_client: ApiClient) -> None:
+def test_update_params_for_auth_appends_and_quotes_cookie_values(
+    api_client: ApiClient,
+) -> None:
     headers: dict[str, str] = {}
     queries: list[tuple[str, str]] = []
     api_client.update_params_for_auth(
-        headers, queries, ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"}
+        headers,
+        queries,
+        ["ignored"],
+        "/",
+        "GET",
+        None,
+        request_auth={"type": "api_key", "in": "cookie", "key": "sid", "value": "abc"},
     )
     api_client.update_params_for_auth(
         headers,
@@ -271,40 +373,83 @@ def test_update_params_for_auth_appends_and_quotes_cookie_values(api_client: Api
         "/",
         "GET",
         None,
-        request_auth={"type": "api_key", "in": "cookie", "key": "csrf", "value": '"already-quoted"'},
+        request_auth={
+            "type": "api_key",
+            "in": "cookie",
+            "key": "csrf",
+            "value": '"already-quoted"',
+        },
     )
     assert headers["Cookie"] == "sid=abc; csrf=%22already-quoted%22"
 
 
-def test_update_params_for_auth_rejects_unsupported_location(api_client: ApiClient) -> None:
+def test_update_params_for_auth_rejects_unsupported_location(
+    api_client: ApiClient,
+) -> None:
     with pytest.raises(ApiValueError):
         api_client.update_params_for_auth(
-            {}, [], ["ignored"], "/", "GET", None, request_auth={"type": "api_key", "in": "body", "key": "x", "value": "y"}
+            {},
+            [],
+            ["ignored"],
+            "/",
+            "GET",
+            None,
+            request_auth={"type": "api_key", "in": "body", "key": "x", "value": "y"},
         )
 
 
-def test_sanitize_for_serialization_handles_supported_values(api_client: ApiClient) -> None:
-    account_response = AccountResponse.from_dict({"data": model_payload(AccountResponseData)})
+def test_sanitize_for_serialization_handles_supported_values(
+    api_client: ApiClient,
+) -> None:
+    account_response = AccountResponse.from_dict(
+        {"data": model_payload(AccountResponseData)}
+    )
     assert api_client.sanitize_for_serialization(None) is None
     assert api_client.sanitize_for_serialization(LocalEnum.VALUE) == "value"
     assert api_client.sanitize_for_serialization(SecretStr("secret")) == "secret"
-    assert api_client.sanitize_for_serialization(uuid.UUID("00000000-0000-0000-0000-000000000001")) == "00000000-0000-0000-0000-000000000001"
-    assert api_client.sanitize_for_serialization(["x", dt.date(2024, 1, 2)]) == ["x", "2024-01-02"]
-    assert api_client.sanitize_for_serialization((dt.date(2024, 1, 2), decimal.Decimal("1.5"))) == ("2024-01-02", "1.5")
+    assert (
+        api_client.sanitize_for_serialization(
+            uuid.UUID("00000000-0000-0000-0000-000000000001")
+        )
+        == "00000000-0000-0000-0000-000000000001"
+    )
+    assert api_client.sanitize_for_serialization(["x", dt.date(2024, 1, 2)]) == [
+        "x",
+        "2024-01-02",
+    ]
+    assert api_client.sanitize_for_serialization(
+        (dt.date(2024, 1, 2), decimal.Decimal("1.5"))
+    ) == ("2024-01-02", "1.5")
     sanitized_account_response = api_client.sanitize_for_serialization(account_response)
     assert isinstance(sanitized_account_response, dict)
     assert sanitized_account_response["data"]
     assert api_client.sanitize_for_serialization(ObjectWithDict()) == {"value": 1}
-    assert api_client.sanitize_for_serialization(ObjectWithListDict()) == [{"value": "yes"}]
+    assert api_client.sanitize_for_serialization(ObjectWithListDict()) == [
+        {"value": "yes"}
+    ]
 
 
 @pytest.mark.asyncio
 async def test_call_api_delegates_and_reraises(api_client: ApiClient) -> None:
     response = http_response()
-    with patch.object(api_client.rest_client, "request", autospec=True, return_value=response):
-        assert await api_client.call_api("GET", "https://api.example", header_params={"Accept": "application/json"}) is response
+    with patch.object(
+        api_client.rest_client, "request", autospec=True, return_value=response
+    ):
+        assert (
+            await api_client.call_api(
+                "GET",
+                "https://api.example",
+                header_params={"Accept": "application/json"},
+            )
+            is response
+        )
     with (
-        patch.object(api_client.rest_client, "request", autospec=True, side_effect=ApiException(status=500, reason="boom")),
+        patch.object(
+            api_client.rest_client,
+            "request",
+            autospec=True,
+            side_effect=ApiException(status=500, reason="boom"),
+        ),
         pytest.raises(ApiException),
     ):
         await api_client.call_api("GET", "https://api.example")
@@ -321,47 +466,96 @@ async def test_response_deserialize_requires_read(api_client: ApiClient) -> None
 @pytest.mark.parametrize(
     ("response", "response_types_map", "expected_data"),
     [
-        pytest.param(http_response(content=b"raw"), {"200": "bytes"}, b"raw", id="bytes"),
-        pytest.param(http_response(content=b'{"data": {"foo": "bar"}}'), {"2XX": "object"}, {"data": {"foo": "bar"}}, id="status-class-fallback"),
         pytest.param(
-            http_response(content=b"value", headers={"content-type": "text/plain; charset=utf-8"}), {"200": "str"}, "value", id="text-plain"
+            http_response(content=b"raw"), {"200": "bytes"}, b"raw", id="bytes"
+        ),
+        pytest.param(
+            http_response(content=b'{"data": {"foo": "bar"}}'),
+            {"2XX": "object"},
+            {"data": {"foo": "bar"}},
+            id="status-class-fallback",
+        ),
+        pytest.param(
+            http_response(
+                content=b"value", headers={"content-type": "text/plain; charset=utf-8"}
+            ),
+            {"200": "str"},
+            "value",
+            id="text-plain",
         ),
         pytest.param(http_response(content=b"value"), {}, None, id="no-matching-type"),
         pytest.param(
-            rest.RESTResponse(httpx.Response(200, content=b'"value"', request=httpx.Request("GET", "https://api.example"))),
+            rest.RESTResponse(
+                httpx.Response(
+                    200,
+                    content=b'"value"',
+                    request=httpx.Request("GET", "https://api.example"),
+                )
+            ),
             {"200": "str"},
             "value",
             id="missing-content-type-header",
         ),
-        pytest.param(http_response(content=b'{"data": {"foo": "bar"}}'), {"default": "object"}, {"data": {"foo": "bar"}}, id="default-fallback"),
+        pytest.param(
+            http_response(content=b'{"data": {"foo": "bar"}}'),
+            {"default": "object"},
+            {"data": {"foo": "bar"}},
+            id="default-fallback",
+        ),
     ],
 )
 async def test_response_deserialize_success_variants(
-    api_client: ApiClient, response: rest.RESTResponse, response_types_map: dict[str, str], expected_data: object
+    api_client: ApiClient,
+    response: rest.RESTResponse,
+    response_types_map: dict[str, str],
+    expected_data: object,
 ) -> None:
     await response.read()
-    assert api_client.response_deserialize(response, response_types_map).data == expected_data
+    assert (
+        api_client.response_deserialize(response, response_types_map).data
+        == expected_data
+    )
 
 
 @pytest.mark.asyncio
 async def test_response_deserialize_file_and_error(api_client: ApiClient) -> None:
     file_response = http_response(
-        content=b"file", headers={"content-type": "application/octet-stream", "Content-Disposition": 'attachment; filename="../report.txt"'}
+        content=b"file",
+        headers={
+            "content-type": "application/octet-stream",
+            "Content-Disposition": 'attachment; filename="../report.txt"',
+        },
     )
     await file_response.read()
     file_path = api_client.response_deserialize(file_response, {"200": "file"}).data
     assert Path(file_path).name == "report.txt"
     assert Path(file_path).read_bytes() == b"file"
 
-    tmp_response = http_response(content=b"tmp", headers={"content-type": "application/octet-stream"})
+    tmp_response = http_response(
+        content=b"tmp", headers={"content-type": "application/octet-stream"}
+    )
     await tmp_response.read()
-    assert Path(api_client.response_deserialize(tmp_response, {"200": "file"}).data).read_bytes() == b"tmp"
+    assert (
+        Path(
+            api_client.response_deserialize(tmp_response, {"200": "file"}).data
+        ).read_bytes()
+        == b"tmp"
+    )
 
     fallback_response = http_response(
-        content=b"fallback", headers={"content-type": "application/octet-stream", "Content-Disposition": 'attachment; filename="."'}
+        content=b"fallback",
+        headers={
+            "content-type": "application/octet-stream",
+            "Content-Disposition": 'attachment; filename="."',
+        },
     )
     await fallback_response.read()
-    assert Path(api_client.response_deserialize(fallback_response, {"200": "file"}).data).read_bytes() == b"fallback"
+    assert (
+        Path(
+            api_client.response_deserialize(fallback_response, {"200": "file"}).data
+        ).read_bytes()
+        == b"fallback"
+    )
 
     bad = http_response(400, content=b'{"error": true}')
     await bad.read()
@@ -382,8 +576,12 @@ async def test_response_deserialize_file_and_error(api_client: ApiClient) -> Non
         pytest.param("plain", "str", None, "plain", id="str-no-content-type"),
         pytest.param("plain", "str", "text/plain", "plain", id="str-text-plain"),
         pytest.param("1", "int", "application/json", 1, id="int"),
-        pytest.param('"2024-01-02"', "date", "application/json", dt.date(2024, 1, 2), id="date"),
-        pytest.param('"1.5"', "decimal", "application/json", decimal.Decimal("1.5"), id="decimal"),
+        pytest.param(
+            '"2024-01-02"', "date", "application/json", dt.date(2024, 1, 2), id="date"
+        ),
+        pytest.param(
+            '"1.5"', "decimal", "application/json", decimal.Decimal("1.5"), id="decimal"
+        ),
         pytest.param(
             '"00000000-0000-0000-0000-000000000001"',
             "UUID",
@@ -394,35 +592,91 @@ async def test_response_deserialize_file_and_error(api_client: ApiClient) -> Non
         pytest.param("true", "bool", "application/json", True, id="bool"),
         pytest.param("1.5", "float", "application/json", 1.5, id="float"),
         pytest.param('["1", "2"]', "List[int]", "application/json", [1, 2], id="list"),
-        pytest.param('{"a": "1"}', "Dict[str, int]", "application/json", {"a": 1}, id="dict"),
+        pytest.param(
+            '{"a": "1"}', "Dict[str, int]", "application/json", {"a": 1}, id="dict"
+        ),
     ],
 )
-def test_deserialize_supported_types(api_client: ApiClient, raw: str, target_type: str, content_type: str | None, expected: object) -> None:
+def test_deserialize_supported_types(
+    api_client: ApiClient,
+    raw: str,
+    target_type: str,
+    content_type: str | None,
+    expected: object,
+) -> None:
     assert api_client.deserialize(raw, target_type, content_type) == expected
 
 
 def test_deserialize_datetime_and_model(api_client: ApiClient) -> None:
-    deserialized_datetime = api_client.deserialize('"2024-01-02T03:04:05+00:00"', "datetime", "application/json")
+    deserialized_datetime = api_client.deserialize(
+        '"2024-01-02T03:04:05+00:00"', "datetime", "application/json"
+    )
     assert isinstance(deserialized_datetime, dt.datetime)
     assert deserialized_datetime.year == 2024
     assert api_client.deserialize(
-        json.dumps(api_client.sanitize_for_serialization(model_payload(AccountResponse))), "AccountResponse", "application/json"
+        json.dumps(
+            api_client.sanitize_for_serialization(model_payload(AccountResponse))
+        ),
+        "AccountResponse",
+        "application/json",
     )
 
 
 @pytest.mark.parametrize(
     ("raw", "target_type", "content_type", "exception_class", "match"),
     [
-        pytest.param("plain", "str", "application/xml", ApiException, "Unsupported content type", id="unsupported-content-type"),
-        pytest.param("[]", "List[", "application/json", AssertionError, None, id="malformed-list-type"),
-        pytest.param("{}", "Dict[str]", "application/json", AssertionError, None, id="malformed-dict-type"),
-        pytest.param('"bad"', "date", "application/json", rest.ApiException, None, id="bad-date"),
-        pytest.param('"bad"', "datetime", "application/json", rest.ApiException, None, id="bad-datetime"),
-        pytest.param('"bad"', "AccountType", "application/json", rest.ApiException, None, id="bad-enum"),
+        pytest.param(
+            "plain",
+            "str",
+            "application/xml",
+            ApiException,
+            "Unsupported content type",
+            id="unsupported-content-type",
+        ),
+        pytest.param(
+            "[]",
+            "List[",
+            "application/json",
+            AssertionError,
+            None,
+            id="malformed-list-type",
+        ),
+        pytest.param(
+            "{}",
+            "Dict[str]",
+            "application/json",
+            AssertionError,
+            None,
+            id="malformed-dict-type",
+        ),
+        pytest.param(
+            '"bad"', "date", "application/json", rest.ApiException, None, id="bad-date"
+        ),
+        pytest.param(
+            '"bad"',
+            "datetime",
+            "application/json",
+            rest.ApiException,
+            None,
+            id="bad-datetime",
+        ),
+        pytest.param(
+            '"bad"',
+            "AccountType",
+            "application/json",
+            rest.ApiException,
+            None,
+            id="bad-enum",
+        ),
     ],
 )
 def test_deserialize_error_cases(
-    api_client: ApiClient, raw: str, target_type: str, content_type: str, exception_class: type[Exception], match: str | None
+    api_client: ApiClient,
+    raw: str,
+    target_type: str,
+    content_type: str,
+    exception_class: type[Exception],
+    match: str | None,
 ) -> None:
     with pytest.raises(exception_class, match=match):
         api_client.deserialize(raw, target_type, content_type)
@@ -436,19 +690,30 @@ def test_deserialize_error_cases(
         pytest.param({"a": 1}, object, {"a": 1}, id="object"),
         pytest.param("2024-01-02", dt.date, dt.date(2024, 1, 2), id="date"),
         pytest.param("1.5", decimal.Decimal, decimal.Decimal("1.5"), id="decimal"),
-        pytest.param("00000000-0000-0000-0000-000000000001", uuid.UUID, uuid.UUID("00000000-0000-0000-0000-000000000001"), id="uuid"),
+        pytest.param(
+            "00000000-0000-0000-0000-000000000001",
+            uuid.UUID,
+            uuid.UUID("00000000-0000-0000-0000-000000000001"),
+            id="uuid",
+        ),
         pytest.param("checking", AccountType, AccountType.CHECKING, id="enum"),
         pytest.param("1", "Optional[int]", 1, id="optional"),
     ],
 )
-def test_deserialize_private_variants(api_client: ApiClient, value: object, target_type: object, expected: object) -> None:
+def test_deserialize_private_variants(
+    api_client: ApiClient, value: object, target_type: object, expected: object
+) -> None:
     deserialize = object.__getattribute__(api_client, "_ApiClient__deserialize")
     assert deserialize(value, target_type) == expected
 
 
-def test_deserialize_private_datetime_and_primitive_fallback(api_client: ApiClient) -> None:
+def test_deserialize_private_datetime_and_primitive_fallback(
+    api_client: ApiClient,
+) -> None:
     deserialize = object.__getattribute__(api_client, "_ApiClient__deserialize")
-    deserialize_primitive = object.__getattribute__(api_client, "_ApiClient__deserialize_primitive")
+    deserialize_primitive = object.__getattribute__(
+        api_client, "_ApiClient__deserialize_primitive"
+    )
     assert deserialize("2024-01-02T03:04:05+00:00", dt.datetime).year == 2024
     assert deserialize_primitive(object(), int)
     unicode_failure = Mock(side_effect=UnicodeEncodeError("utf-8", "x", 0, 1, "bad"))
@@ -456,9 +721,17 @@ def test_deserialize_private_datetime_and_primitive_fallback(api_client: ApiClie
 
 
 @patch("asyncio_for_ynab.api_client.parse", autospec=True, side_effect=ImportError)
-def test_deserialize_date_and_datetime_import_error(parse: Mock, api_client: ApiClient) -> None:
-    assert object.__getattribute__(api_client, "_ApiClient__deserialize_date")("bad") == "bad"
-    assert object.__getattribute__(api_client, "_ApiClient__deserialize_datetime")("bad") == "bad"
+def test_deserialize_date_and_datetime_import_error(
+    parse: Mock, api_client: ApiClient
+) -> None:
+    assert (
+        object.__getattribute__(api_client, "_ApiClient__deserialize_date")("bad")
+        == "bad"
+    )
+    assert (
+        object.__getattribute__(api_client, "_ApiClient__deserialize_datetime")("bad")
+        == "bad"
+    )
 
 
 def test_configuration_defaults_and_auth(tmp_path: Path) -> None:
@@ -519,14 +792,27 @@ def test_configuration_host_settings_validation() -> None:
             "url": "https://{env}.example/{version}",
             "description": "test",
             "variables": {
-                "env": {"default_value": "dev", "enum_values": ["dev", "prod"], "description": ""},
-                "version": {"default_value": "v1", "enum_values": [], "description": ""},
+                "env": {
+                    "default_value": "dev",
+                    "enum_values": ["dev", "prod"],
+                    "description": "",
+                },
+                "version": {
+                    "default_value": "v1",
+                    "enum_values": [],
+                    "description": "",
+                },
             },
         }
     ]
     assert config.get_host_from_settings(None) == config._base_path
     assert config.get_host_from_settings(0, servers=servers) == "https://dev.example/v1"
-    assert config.get_host_from_settings(0, variables={"env": "prod", "version": "v2"}, servers=servers) == "https://prod.example/v2"
+    assert (
+        config.get_host_from_settings(
+            0, variables={"env": "prod", "version": "v2"}, servers=servers
+        )
+        == "https://prod.example/v2"
+    )
     with pytest.raises(ValueError, match="Invalid index"):
         config.get_host_from_settings(2, servers=servers)
     with pytest.raises(ValueError, match="invalid value"):
@@ -536,13 +822,17 @@ def test_configuration_host_settings_validation() -> None:
 @pytest.mark.parametrize(
     ("exception_class", "args"),
     [
-        pytest.param(ApiTypeError, {"valid_classes": (str,), "key_type": True}, id="type"),
+        pytest.param(
+            ApiTypeError, {"valid_classes": (str,), "key_type": True}, id="type"
+        ),
         pytest.param(ApiValueError, {}, id="value"),
         pytest.param(ApiAttributeError, {}, id="attribute"),
         pytest.param(ApiKeyError, {}, id="key"),
     ],
 )
-def test_path_aware_exceptions(exception_class: type[Exception], args: dict[str, Any]) -> None:
+def test_path_aware_exceptions(
+    exception_class: type[Exception], args: dict[str, Any]
+) -> None:
     exception = exception_class("bad", **{"path_to_item": ["data", 0, "name"], **args})
     assert "['data'][0]['name']" in str(exception)
     assert "bad" in str(exception_class("bad", **args))
@@ -562,10 +852,14 @@ def test_path_aware_exceptions(exception_class: type[Exception], args: dict[str,
         pytest.param(418, ApiException, id="default"),
     ],
 )
-def test_api_exception_from_response(status: int, exception_class: type[ApiException]) -> None:
+def test_api_exception_from_response(
+    status: int, exception_class: type[ApiException]
+) -> None:
     response = http_response(status, content=b"body", headers={"x": "y"})
     with pytest.raises(exception_class) as excinfo:
-        ApiException.from_response(http_resp=response, body="body", data={"parsed": True})
+        ApiException.from_response(
+            http_resp=response, body="body", data={"parsed": True}
+        )
     assert "Reason:" in str(excinfo.value)
     assert "HTTP response headers" in str(excinfo.value)
     assert "HTTP response body" in str(excinfo.value)
@@ -577,7 +871,9 @@ def test_api_exception_with_http_response_decode_failure() -> None:
     exception = ApiException(http_resp=response)
     assert exception.status == 418
     assert exception.body is None
-    explicit = ApiException(status=499, reason="explicit", http_resp=response, body="body")
+    explicit = ApiException(
+        status=499, reason="explicit", http_resp=response, body="body"
+    )
     assert explicit.status == 499
     assert explicit.reason == "explicit"
     assert explicit.body == "body"
@@ -594,29 +890,56 @@ async def test_rest_response_reads_once() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("method", ["GET", "HEAD", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"])
-async def test_rest_client_request_builds_supported_methods(configuration: Configuration, method: str) -> None:
+@pytest.mark.parametrize(
+    "method", ["GET", "HEAD", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"]
+)
+async def test_rest_client_request_builds_supported_methods(
+    configuration: Configuration, method: str
+) -> None:
     client = rest.RESTClientObject(configuration)
     pool = httpx.AsyncClient()
     client.pool_manager = pool
     headers = {"Content-Type": "application/json"}
     with patch.object(
-        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request(method, "https://api.example"))
+        pool,
+        "request",
+        autospec=True,
+        return_value=httpx.Response(
+            200, content=b"{}", request=httpx.Request(method, "https://api.example")
+        ),
     ) as request:
-        response = await client.request(method, "https://api.example", headers=headers, body={"ok": True}, _request_timeout=1)
+        response = await client.request(
+            method,
+            "https://api.example",
+            headers=headers,
+            body={"ok": True},
+            _request_timeout=1,
+        )
         assert response.status == 200
         request.assert_awaited_once()
     await pool.aclose()
 
 
 @pytest.mark.asyncio
-async def test_rest_client_request_uses_defaults_and_creates_pool(configuration: Configuration) -> None:
+async def test_rest_client_request_uses_defaults_and_creates_pool(
+    configuration: Configuration,
+) -> None:
     client = rest.RESTClientObject(configuration)
     pool = httpx.AsyncClient()
     with (
-        patch.object(rest.RESTClientObject, "_create_pool_manager", autospec=True, return_value=pool) as create_pool_manager,
         patch.object(
-            pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("GET", "https://api.example"))
+            rest.RESTClientObject,
+            "_create_pool_manager",
+            autospec=True,
+            return_value=pool,
+        ) as create_pool_manager,
+        patch.object(
+            pool,
+            "request",
+            autospec=True,
+            return_value=httpx.Response(
+                200, content=b"{}", request=httpx.Request("GET", "https://api.example")
+            ),
         ) as request,
     ):
         response = await client.request("GET", "https://api.example")
@@ -627,58 +950,112 @@ async def test_rest_client_request_uses_defaults_and_creates_pool(configuration:
 
 
 @pytest.mark.asyncio
-async def test_rest_client_request_sends_json_post_params(configuration: Configuration) -> None:
+async def test_rest_client_request_sends_json_post_params(
+    configuration: Configuration,
+) -> None:
     client = rest.RESTClientObject(configuration)
     pool = httpx.AsyncClient()
     client.pool_manager = pool
     with patch.object(
-        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example"))
+        pool,
+        "request",
+        autospec=True,
+        return_value=httpx.Response(
+            200, content=b"{}", request=httpx.Request("POST", "https://api.example")
+        ),
     ) as request:
-        response = await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"}, post_params=[("a", "b")])
+        response = await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "application/json"},
+            post_params=[("a", "b")],
+        )
         assert response.status == 200
         request.assert_awaited_once_with(
-            method="POST", url="https://api.example", timeout=300, headers={"Content-Type": "application/json"}, json={"a": "b"}
+            method="POST",
+            url="https://api.example",
+            timeout=300,
+            headers={"Content-Type": "application/json"},
+            json={"a": "b"},
         )
     await pool.aclose()
 
 
 @pytest.mark.asyncio
-async def test_rest_client_request_handles_form_multipart_and_raw_body(configuration: Configuration) -> None:
+async def test_rest_client_request_handles_form_multipart_and_raw_body(
+    configuration: Configuration,
+) -> None:
     client = rest.RESTClientObject(configuration)
     pool = httpx.AsyncClient()
     client.pool_manager = pool
     with patch.object(
-        pool, "request", autospec=True, return_value=httpx.Response(200, content=b"{}", request=httpx.Request("POST", "https://api.example"))
+        pool,
+        "request",
+        autospec=True,
+        return_value=httpx.Response(
+            200, content=b"{}", request=httpx.Request("POST", "https://api.example")
+        ),
     ) as request:
-        await client.request("POST", "https://api.example", headers={"Content-Type": "application/x-www-form-urlencoded"}, post_params=[("a", "b")])
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            post_params=[("a", "b")],
+        )
         await client.request(
             "POST",
             "https://api.example",
             headers={"Content-Type": "multipart/form-data"},
-            post_params=[("file", ("name.txt", b"data", "text/plain")), ("meta", {"a": 1}), ("count", 2), ("plain", "text")],
+            post_params=[
+                ("file", ("name.txt", b"data", "text/plain")),
+                ("meta", {"a": 1}),
+                ("count", 2),
+                ("plain", "text"),
+            ],
         )
-        await client.request("POST", "https://api.example", headers={"Content-Type": "multipart/form-data"}, post_params=[("plain", "text")])
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "multipart/form-data"},
+            post_params=[("plain", "text")],
+        )
         await client.request(
             "POST",
             "https://api.example",
             headers={"Content-Type": "multipart/form-data"},
             post_params=[("file", ("name.txt", b"data", "text/plain"))],
         )
-        await client.request("POST", "https://api.example", headers={"Content-Type": "text/plain"}, body="raw")
-        await client.request("POST", "https://api.example", headers={"Content-Type": "application/json"})
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "text/plain"},
+            body="raw",
+        )
+        await client.request(
+            "POST", "https://api.example", headers={"Content-Type": "application/json"}
+        )
         assert request.await_count == 6
     await pool.aclose()
 
 
 @pytest.mark.asyncio
-async def test_rest_client_request_rejects_invalid_inputs(configuration: Configuration) -> None:
+async def test_rest_client_request_rejects_invalid_inputs(
+    configuration: Configuration,
+) -> None:
     client = rest.RESTClientObject(configuration)
     with pytest.raises(AssertionError):
         await client.request("TRACE", "https://api.example")
     with pytest.raises(ApiValueError):
-        await client.request("POST", "https://api.example", body={"a": 1}, post_params=[("a", "b")])
+        await client.request(
+            "POST", "https://api.example", body={"a": 1}, post_params=[("a", "b")]
+        )
     with pytest.raises(ApiException):
-        await client.request("POST", "https://api.example", headers={"Content-Type": "text/plain"}, body={"a": 1})
+        await client.request(
+            "POST",
+            "https://api.example",
+            headers={"Content-Type": "text/plain"},
+            body={"a": 1},
+        )
 
 
 @pytest.mark.asyncio
@@ -693,18 +1070,24 @@ async def test_rest_client_closes_pool(configuration: Configuration) -> None:
 
 @patch("asyncio_for_ynab.rest.httpx.AsyncClient", autospec=True)
 @patch("asyncio_for_ynab.rest.httpx.Proxy", autospec=True)
-def test_rest_client_create_pool_manager_uses_proxy(proxy: Mock, async_client: Mock, configuration: Configuration) -> None:
+def test_rest_client_create_pool_manager_uses_proxy(
+    proxy: Mock, async_client: Mock, configuration: Configuration
+) -> None:
     configuration.proxy = "https://proxy.example"
     configuration.proxy_headers = {"X-Proxy": "yes"}
     client = rest.RESTClientObject(configuration)
     result = client._create_pool_manager()
     assert result is async_client.return_value
-    proxy.assert_called_once_with(url="https://proxy.example", headers={"X-Proxy": "yes"})
+    proxy.assert_called_once_with(
+        url="https://proxy.example", headers={"X-Proxy": "yes"}
+    )
     async_client.assert_called_once()
 
 
 @patch("asyncio_for_ynab.rest.httpx.AsyncClient", autospec=True)
-def test_rest_client_create_pool_manager_without_proxy(async_client: Mock, configuration: Configuration) -> None:
+def test_rest_client_create_pool_manager_without_proxy(
+    async_client: Mock, configuration: Configuration
+) -> None:
     client = rest.RESTClientObject(configuration)
     assert client._create_pool_manager() is async_client.return_value
     async_client.assert_called_once()
@@ -714,7 +1097,13 @@ def test_rest_client_create_pool_manager_without_proxy(async_client: Mock, confi
 def test_rest_client_ssl_configuration(create_default_context: Mock) -> None:
     context = Mock()
     create_default_context.return_value = context
-    config = Configuration(verify_ssl=False, ssl_ca_cert="ca.pem", ca_cert_data="cert-data", cert_file="cert.pem", key_file="key.pem")
+    config = Configuration(
+        verify_ssl=False,
+        ssl_ca_cert="ca.pem",
+        ca_cert_data="cert-data",
+        cert_file="cert.pem",
+        key_file="key.pem",
+    )
     client = rest.RESTClientObject(config)
     assert client.ssl_context is context
     context.load_cert_chain.assert_called_once_with("cert.pem", keyfile="key.pem")

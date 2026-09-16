@@ -63,10 +63,6 @@ exclude = ["asyncio_for_ynab/**", "test/**"]
 addopts = "--import-mode=importlib"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.ruff]
-line-length = 150
-target-version = "py310"
-
 [tool.ruff.lint]
 extend-select = [
   "A",  # see flake8-builtins
