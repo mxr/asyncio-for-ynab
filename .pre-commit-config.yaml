@@ -1,4 +1,6 @@
 # these are generated
+default_language_version:
+  python: python3.11
 exclude: |
   (?x)^(
       asyncio_for_ynab/.+|
@@ -79,7 +81,6 @@ repos:
     - types-python-dateutil
     - types-setuptools
     - typing-extensions>=4.7.1
-    language_version: python3.10
 - repo: https://github.com/mxr/sync-typing-deps
   rev: 896a112838d434d8e607d4d636323c5914ab933f  # frozen: v0.7.0
   hooks:
@@ -88,7 +89,6 @@ repos:
   rev: 7ff8d35ae36a7d2b968f2f90b4c723e292e594ee  # frozen: v2.3.1
   hooks:
   - id: mypy
-    language_version: python3.10
     additional_dependencies:
     - aioresponses
     - coverage
