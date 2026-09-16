@@ -36,7 +36,9 @@ class EmptyModel(BaseModel):
 
 @patch("test_custom.pkgutil.iter_modules", autospec=True)
 def test_iter_helpers_skip_private_modules(iter_modules: Mock) -> None:
-    iter_modules.return_value = [pkgutil.ModuleInfo(MetaPathFinder(), "_private", False)]
+    iter_modules.return_value = [
+        pkgutil.ModuleInfo(MetaPathFinder(), "_private", False)
+    ]
     assert conftest.iter_model_classes() == []
     assert conftest.iter_enum_classes() == []
     assert conftest.iter_api_classes() == []
@@ -75,7 +77,9 @@ def _iter_generated_test_classes() -> list[type[unittest.TestCase]]:
     for module_info in pkgutil.iter_modules(importlib.import_module("test").__path__):
         module = importlib.import_module(f"test.{module_info.name}")
         test_classes.extend(
-            obj for _, obj in inspect.getmembers(module, inspect.isclass) if issubclass(obj, unittest.TestCase) and obj.__module__ == module.__name__
+            obj
+            for _, obj in inspect.getmembers(module, inspect.isclass)
+            if issubclass(obj, unittest.TestCase) and obj.__module__ == module.__name__
         )
     return test_classes
 
@@ -83,9 +87,14 @@ def _iter_generated_test_classes() -> list[type[unittest.TestCase]]:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_class",
-    [pytest.param(test_class, id=test_class.__name__) for test_class in _iter_generated_test_classes()],
+    [
+        pytest.param(test_class, id=test_class.__name__)
+        for test_class in _iter_generated_test_classes()
+    ],
 )
-async def test_generated_unittest_stubs_execute_make_instance_methods(test_class: type[unittest.TestCase], subtests: pytest.Subtests) -> None:
+async def test_generated_unittest_stubs_execute_make_instance_methods(
+    test_class: type[unittest.TestCase], subtests: pytest.Subtests
+) -> None:
     instance = test_class()
     instance.setUp()
     try:
