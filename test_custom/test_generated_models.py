@@ -16,8 +16,7 @@ from test_custom import value_for_annotation
 if TYPE_CHECKING:
     from typing import Any
     from typing import Protocol
-
-    from typing_extensions import Self
+    from typing import Self
 
     class EnumWithFromJson(Protocol):
         @classmethod

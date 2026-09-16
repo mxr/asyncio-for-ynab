@@ -119,7 +119,7 @@ def value_for_annotation(annotation: Any) -> Any:
     if annotation is dt.date:
         return dt.date(2024, 1, 2)
     if annotation is dt.datetime:
-        return dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=dt.timezone.utc)
+        return dt.datetime(2024, 1, 2, 3, 4, 5, tzinfo=dt.UTC)
     if annotation is decimal.Decimal:
         return decimal.Decimal("1.5")
     if annotation is uuid.UUID:

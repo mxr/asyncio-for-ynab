@@ -12,7 +12,7 @@ dev = [
 ]
 
 [project]
-authors = [{name = "Max R", email = "mxr@users.noreply.github.com"}]
+authors = [{ name = "Max R", email = "mxr@users.noreply.github.com" }]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -29,7 +29,7 @@ keywords = ["ynab", "budget", "asyncio", "openapi", "httpx"]
 license = "MIT"
 name = "asyncio_for_ynab"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 version = "1.86.0"
 
 [project.urls]
@@ -85,7 +85,7 @@ asyncio_for_ynab = ["py.typed"]
 find = {}
 
 [tool.tox]
-env_list = ["py310", "py311", "py312", "py313", "py314", "pre-commit"]
+env_list = ["py311", "py312", "py313", "py314", "pre-commit"]
 
 [tool.tox.env.pre-commit]
 commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
