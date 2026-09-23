@@ -2,17 +2,47 @@ name: release
 
 on:
   push:
-    tags:
-    - '**'
+    branches:
+    - main
+    paths:
+    - pyproject.toml
 
 permissions: {}
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Get version
+      id: version
+      shell: bash
+      run: |
+        version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - name: Check if tag already exists
+      id: check
+      shell: bash
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        exists=$(git tag -l "v$VERSION" | grep -q . && echo true || echo false)
+        echo "exists=$exists" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: check
+    if: needs.check.outputs.exists == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -20,6 +50,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -37,8 +69,15 @@ jobs:
       uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
       with:
         packages-dir: dist/
+    - name: Tag release commit
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        git tag "v$VERSION" "$GITHUB_SHA"
+        git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "v$VERSION"
     - name: Create GitHub release
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
-      run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes
+      run: gh release create "v$VERSION" dist/* --target "$GITHUB_SHA" --generate-notes
