@@ -46,23 +46,6 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-## Common Patterns
-
-Create a client once and pass it to any generated API class:
-
-```python
-from asyncio_for_ynab import AccountsApi
-from asyncio_for_ynab import ApiClient
-from asyncio_for_ynab import Configuration
-
-
-configuration = Configuration(access_token="your-access-token")
-
-async with ApiClient(configuration) as api_client:
-    accounts_api = AccountsApi(api_client)
-    accounts = await accounts_api.get_accounts()
-```
-
 The package also exports generated models, response objects, and exceptions at the top level:
 
 ```python
