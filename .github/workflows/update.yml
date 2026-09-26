@@ -45,16 +45,16 @@ jobs:
 
         if cmp -s config/spec.yaml "$tmp"; then
           echo "YNAB spec is already current."
-          echo "CHANGED=false" >> "$GITHUB_ENV"
+          echo "SPEC_CHANGED=false" >> "$GITHUB_ENV"
           exit 0
         fi
 
         mv "$tmp" config/spec.yaml
         trap - EXIT
-        echo "CHANGED=true" >> "$GITHUB_ENV"
+        echo "SPEC_CHANGED=true" >> "$GITHUB_ENV"
 
     - name: Sync generator version
-      if: env.CHANGED == 'true'
+      if: env.SPEC_CHANGED == 'true'
       run: |
         version="$(sed -n 's/^  version: //p' config/spec.yaml | head -n 1)"
 
@@ -70,9 +70,38 @@ jobs:
         trap - EXIT
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
-    - name: Determine revision
+    - name: Validate OpenAPI spec
+      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
+      with:
+        args: validate -i config/spec.yaml
+
+    - name: Generate async YNAB SDK
+      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
+      with:
+        args: generate -i config/spec.yaml -g python -c config/openapi.yaml -t templates/python -o . --minimal-update
+
+    - name: Check for changes
+      run: |
+        # docker steps run as root, so reclaim generated files for later git operations
+        sudo chown -R "$(id -u):$(id -g)" .
+
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "Generated SDK is already current."
+          echo "CHANGED=false" >> "$GITHUB_ENV"
+        else
+          echo "CHANGED=true" >> "$GITHUB_ENV"
+        fi
+
+    - name: Determine title
       if: env.CHANGED == 'true'
       run: |
+        generator_version="$(cat .openapi-generator/VERSION)"
+
+        if [ "$SPEC_CHANGED" != 'true' ]; then
+          echo "SPEC_TITLE=Generate YNAB SDK with openapi generator v$generator_version" >> "$GITHUB_ENV"
+          exit 0
+        fi
+
         base_title="Update YNAB API spec to v$SPEC_VERSION"
         pattern="^${base_title}( \(revision [0-9]+\))?"
 
@@ -84,11 +113,16 @@ jobs:
         # confusing title.
         count="$(git log --oneline --grep="$pattern" --extended-regexp "$latest_tag"^..HEAD | wc -l | tr -d ' ')"
 
-        if [ "$count" -eq 0 ]; then
-          echo "SPEC_TITLE=$base_title" >> "$GITHUB_ENV"
-        else
-          echo "SPEC_TITLE=$base_title (revision $((count + 1)))" >> "$GITHUB_ENV"
+        title="$base_title"
+        if [ "$count" -ne 0 ]; then
+          title="$title (revision $((count + 1)))"
         fi
+
+        if ! git diff --quiet -- .openapi-generator/VERSION; then
+          title="$title and openapi generator to v$generator_version"
+        fi
+
+        echo "SPEC_TITLE=$title" >> "$GITHUB_ENV"
       env:
         SPEC_VERSION: ${{ env.SPEC_VERSION }}
 
