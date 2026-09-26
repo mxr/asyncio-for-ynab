@@ -75,7 +75,7 @@ jobs:
         python-version: '3.14'
 
     - name: Install OpenAPI generator
-      run: python -m pip install -r config/generator-requirements.txt
+      run: python -m pip install 'openapi-generator-cli[jdk4py]==7.25.0'
 
     - name: Validate OpenAPI spec
       run: openapi-generator-cli validate -i config/spec.yaml
