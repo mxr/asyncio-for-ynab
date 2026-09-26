@@ -95,8 +95,10 @@ jobs:
     - name: Determine title
       if: env.CHANGED == 'true'
       run: |
+        generator_version="$(cat .openapi-generator/VERSION)"
+
         if [ "$SPEC_CHANGED" != 'true' ]; then
-          echo "SPEC_TITLE=Generate YNAB SDK with openapi generator v$(cat .openapi-generator/VERSION)" >> "$GITHUB_ENV"
+          echo "SPEC_TITLE=Generate YNAB SDK with openapi generator v$generator_version" >> "$GITHUB_ENV"
           exit 0
         fi
 
@@ -111,11 +113,16 @@ jobs:
         # confusing title.
         count="$(git log --oneline --grep="$pattern" --extended-regexp "$latest_tag"^..HEAD | wc -l | tr -d ' ')"
 
-        if [ "$count" -eq 0 ]; then
-          echo "SPEC_TITLE=$base_title" >> "$GITHUB_ENV"
-        else
-          echo "SPEC_TITLE=$base_title (revision $((count + 1)))" >> "$GITHUB_ENV"
+        title="$base_title"
+        if [ "$count" -ne 0 ]; then
+          title="$title (revision $((count + 1)))"
         fi
+
+        if ! git diff --quiet -- .openapi-generator/VERSION; then
+          title="$title and openapi generator to v$generator_version"
+        fi
+
+        echo "SPEC_TITLE=$title" >> "$GITHUB_ENV"
       env:
         SPEC_VERSION: ${{ env.SPEC_VERSION }}
 
