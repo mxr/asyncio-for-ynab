@@ -2,6 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "commitMessageAction": "weekly",
   "commitMessagePrefix": "[renovate]",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "pypi",
+      "depNameTemplate": "openapi-generator-cli",
+      "managerFilePatterns": ["/^\\.github/workflows/update\\.yml$/"],
+      "matchStrings": ["openapi-generator-cli\\[jdk4py\\]==(?<currentValue>[^'\\s]+)"]
+    }
+  ],
   "extends": ["config:recommended", ":disableDependencyDashboard"],
   "groupSingleUpdates": true,
   "minimumReleaseAge": "7 days",
