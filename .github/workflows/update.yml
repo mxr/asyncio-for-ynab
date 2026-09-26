@@ -45,16 +45,16 @@ jobs:
 
         if cmp -s config/spec.yaml "$tmp"; then
           echo "YNAB spec is already current."
-          echo "CHANGED=false" >> "$GITHUB_ENV"
+          echo "SPEC_CHANGED=false" >> "$GITHUB_ENV"
           exit 0
         fi
 
         mv "$tmp" config/spec.yaml
         trap - EXIT
-        echo "CHANGED=true" >> "$GITHUB_ENV"
+        echo "SPEC_CHANGED=true" >> "$GITHUB_ENV"
 
     - name: Sync generator version
-      if: env.CHANGED == 'true'
+      if: env.SPEC_CHANGED == 'true'
       run: |
         version="$(sed -n 's/^  version: //p' config/spec.yaml | head -n 1)"
 
@@ -70,9 +70,41 @@ jobs:
         trap - EXIT
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
-    - name: Determine revision
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      with:
+        python-version: '3.14'
+
+    - name: Install OpenAPI generator
+      run: python -m pip install -r config/generator-requirements.txt
+
+    - name: Validate OpenAPI spec
+      run: openapi-generator-cli validate -i config/spec.yaml
+
+    - name: Generate async YNAB SDK
+      run: |
+        openapi-generator-cli generate \
+          -i config/spec.yaml \
+          -g python \
+          -c config/openapi.yaml \
+          -t templates/python \
+          -o . \
+          --minimal-update
+
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "Generated SDK is already current."
+          echo "CHANGED=false" >> "$GITHUB_ENV"
+        else
+          echo "CHANGED=true" >> "$GITHUB_ENV"
+        fi
+
+    - name: Determine title
       if: env.CHANGED == 'true'
       run: |
+        if [ "$SPEC_CHANGED" != 'true' ]; then
+          echo "SPEC_TITLE=Regenerate async YNAB SDK" >> "$GITHUB_ENV"
+          exit 0
+        fi
+
         base_title="Update YNAB API spec to v$SPEC_VERSION"
         pattern="^${base_title}( \(revision [0-9]+\))?"
 

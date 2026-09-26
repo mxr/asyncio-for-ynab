@@ -34,28 +34,6 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix]
     exclude: config/spec.yaml
-- repo: https://github.com/mxr/mirrors-openapi-generator-cli
-  rev: b6ce956d43315dba7c704f89f72963bdfd7c38b8  # frozen: v7.25.0
-  hooks:
-  - id: openapi-generator-cli
-    alias: openapi-validate
-    name: validate OpenAPI spec
-    args: [validate, -i, config/spec.yaml]
-    pass_filenames: false
-    files: |
-      (?x)^(
-          config/.*\.ya?ml
-      )$
-  - id: openapi-generator-cli
-    alias: openapi-generate
-    name: generate async YNAB SDK
-    args: [generate, -i, config/spec.yaml, -g, python, -c, config/openapi.yaml, -t, templates/python, -o, ., --minimal-update]
-    pass_filenames: false
-    files: |
-      (?x)^(
-          config/.*\.ya?ml|
-          templates/python/.*\.mustache
-      )$
 - repo: https://github.com/mxr/mirrors-pyright
   rev: 917816f768b32cc3aabd877e48b9001e7bf1b35c  # frozen: v1.1.414
   hooks:
