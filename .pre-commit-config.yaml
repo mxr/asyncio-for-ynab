@@ -15,6 +15,10 @@ repos:
   - id: ruff-check
     args: [--fix]
   - id: ruff-format
+- repo: https://github.com/biomejs/pre-commit
+  rev: 221fa73eac76e0540995318b44e2efb2774af990  # frozen: v2.5.14
+  hooks:
+  - id: biome-check
 - repo: https://github.com/hukkin/mdformat
   rev: 2d496dbc18e31b83a1596685347ffe0b6041daf0  # frozen: 1.0.0
   hooks:
@@ -42,7 +46,6 @@ repos:
       (?x)^(
           config/.*\.ya?ml
       )$
-
   - id: openapi-generator-cli
     alias: openapi-generate
     name: generate async YNAB SDK
@@ -105,8 +108,6 @@ repos:
   - id: check-docstring-first
   - id: debug-statements
   - id: end-of-file-fixer
-  - id: pretty-format-json
-    args: [--autofix, --indent=2]
   - id: trailing-whitespace
     exclude: config/spec.yaml
 - repo: https://github.com/rhysd/actionlint
@@ -120,3 +121,12 @@ repos:
   hooks:
   - id: zizmor
     args: [--no-progress, --fix]
+- repo: local
+  hooks:
+  - id: biome-schema-version
+    name: biome schema version
+    entry: |-
+      python3 -c 'import re, pathlib; cfg = pathlib.Path(".pre-commit-config.yaml").read_text(); ver = re.search(r"biomejs/pre-commit.*?frozen: v([0-9.]+)", cfg, re.S)[1]; p = pathlib.Path("biome.json"); p.write_text(re.sub(r"schemas/[^/]+/schema\.json", f"schemas/{ver}/schema.json", p.read_text()))'
+    language: python
+    files: ^(biome\.json|\.pre-commit-config\.yaml)$
+    pass_filenames: false
