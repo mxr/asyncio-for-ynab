@@ -101,7 +101,8 @@ jobs:
       if: env.CHANGED == 'true'
       run: |
         if [ "$SPEC_CHANGED" != 'true' ]; then
-          echo "SPEC_TITLE=Regenerate async YNAB SDK" >> "$GITHUB_ENV"
+          generator_version="$(sed -n 's/^openapi-generator-cli.*==//p' config/generator-requirements.txt)"
+          echo "SPEC_TITLE=Generate YNAB SDK with openapi generator v$generator_version" >> "$GITHUB_ENV"
           exit 0
         fi
 
