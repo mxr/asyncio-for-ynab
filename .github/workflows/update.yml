@@ -70,25 +70,20 @@ jobs:
         trap - EXIT
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
-    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-      with:
-        python-version: '3.14'
-
-    - name: Install OpenAPI generator
-      run: python -m pip install 'openapi-generator-cli[jdk4py]==7.25.0'
-
     - name: Validate OpenAPI spec
-      run: openapi-generator-cli validate -i config/spec.yaml
+      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
+      with:
+        args: validate -i config/spec.yaml
 
     - name: Generate async YNAB SDK
+      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
+      with:
+        args: generate -i config/spec.yaml -g python -c config/openapi.yaml -t templates/python -o . --minimal-update
+
+    - name: Check for changes
       run: |
-        openapi-generator-cli generate \
-          -i config/spec.yaml \
-          -g python \
-          -c config/openapi.yaml \
-          -t templates/python \
-          -o . \
-          --minimal-update
+        # docker steps run as root, so reclaim generated files for later git operations
+        sudo chown -R "$(id -u):$(id -g)" .
 
         if [ -z "$(git status --porcelain)" ]; then
           echo "Generated SDK is already current."
