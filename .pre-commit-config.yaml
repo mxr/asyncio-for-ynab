@@ -34,7 +34,7 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix]
     exclude: config/spec.yaml
-- repo: https://github.com/mxr/mirrors-pyright
+- repo: https://github.com/mxr/pyright-pre-commit
   rev: 917816f768b32cc3aabd877e48b9001e7bf1b35c  # frozen: v1.1.414
   hooks:
   - id: pyright
