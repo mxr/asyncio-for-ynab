@@ -3,7 +3,7 @@ name: Update
 on:
   workflow_dispatch:
   schedule:
-  - cron: 5 0 * * *     # every day at 00:05 UTC
+  - cron: 0 10 * * *    # 6:00 AM EDT
 
 permissions: {}
 
