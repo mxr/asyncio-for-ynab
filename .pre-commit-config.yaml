@@ -5,6 +5,7 @@ exclude: |
   (?x)^(
       asyncio_for_ynab/.+|
       docs/.+|
+      pyproject\.toml|
       test/.+
   )$
 
@@ -29,15 +30,13 @@ repos:
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
   rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # frozen: v2.16.0
   hooks:
-  - id: pretty-format-toml
-    args: [--autofix, --trailing-commas]
   - id: pretty-format-yaml
     args: [--autofix]
     exclude: config/spec.yaml
-- repo: https://github.com/mxr/pyright-pre-commit
-  rev: 917816f768b32cc3aabd877e48b9001e7bf1b35c  # frozen: v1.1.414
+- repo: https://github.com/mxr/mirrors-ty
+  rev: ea8dbd382e40a986e80806b921e30a762785b580  # frozen: v0.0.84
   hooks:
-  - id: pyright
+  - id: ty
     additional_dependencies:
     - aioresponses
     - coverage
@@ -48,10 +47,10 @@ repos:
     - types-python-dateutil
     - types-setuptools
     - typing-extensions>=4.7.1
-- repo: https://github.com/mxr/mirrors-ty
-  rev: ea8dbd382e40a986e80806b921e30a762785b580  # frozen: v0.0.84
+- repo: https://github.com/mxr/pyright-pre-commit
+  rev: 917816f768b32cc3aabd877e48b9001e7bf1b35c  # frozen: v1.1.414
   hooks:
-  - id: ty
+  - id: pyright
     additional_dependencies:
     - aioresponses
     - coverage
@@ -94,6 +93,12 @@ repos:
   - id: actionlint
     additional_dependencies:
     - github.com/wasilibs/go-shellcheck/cmd/shellcheck@latest
+- repo: https://github.com/tombi-toml/tombi-pre-commit
+  rev: 819a761d4cad4adbe153e31e3851996b223c8aaa  # frozen: v1.7.1
+  hooks:
+  - id: tombi-format
+    args: [--offline, --quiet]
+    exclude: ^(uv\.lock)$
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
   rev: fa412071e4f5d44d44f9e365f4676f9df92456a2  # frozen: v1.30.1
   hooks:
