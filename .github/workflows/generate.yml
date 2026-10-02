@@ -1,0 +1,49 @@
+name: generate
+
+on:
+  pull_request:
+    paths:
+    - .github/actions/generate-sdk/**
+    - .github/workflows/generate.yml
+    - .openapi-generator-ignore
+    - config/**
+    - templates/**
+
+permissions: {}
+
+concurrency:
+  group: generate-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    # pushing the generated SDK back needs the branch to be in this repo
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+      with:
+        ref: ${{ github.head_ref }}
+        persist-credentials: false
+
+    - name: Generate async YNAB SDK
+      uses: ./.github/actions/generate-sdk  # zizmor: ignore[self-repository] actionlint rejects $/
+
+    - name: Commit generated SDK
+      env:
+        GH_TOKEN: ${{ github.token }}
+        HEAD_REF: ${{ github.head_ref }}
+      run: |
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "Generated SDK is already current."
+          exit 0
+        fi
+
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git add --all
+        git commit --message 'Generate YNAB SDK with openapi generator'
+        git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$HEAD_REF"
