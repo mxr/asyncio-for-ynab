@@ -1,0 +1,18 @@
+stack: [python]
+opt:
+  python:
+    min-version: '3.11'
+    pyproject-path: templates/python/pyproject.mustache
+    tests-dir: test_custom
+    extras:
+      generated: [asyncio_for_ynab, test]
+      tests: [test]
+  pre-commit:
+    exclude: [asyncio_for_ynab/.+, config/spec\.yaml, docs/.+, test/.+]
+  mergify:
+    extras:
+      rules:
+      - name: automatic merge for spec updates
+        conditions:
+        - author=github[bot]
+        - title~=^(Update YNAB API spec|Generate YNAB SDK with openapi generator)
