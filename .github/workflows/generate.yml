@@ -55,6 +55,10 @@ jobs:
           exit 0
         fi
 
+        # pushes with GITHUB_TOKEN don't trigger workflows, so leave trailing
+        # whitespace for pre-commit.ci to fix: its autofix push triggers CI
+        sed -i 's/$/ /' .openapi-generator/VERSION
+
         git config user.name 'github-actions[bot]'
         git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
         git add --all
