@@ -1,18 +1,13 @@
-[build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
-
-[dependency-groups]
-dev = [
-  "aioresponses",
-  "covdefaults>=2.1.0",
-  "coverage",
-  "pytest",
-  "pytest-asyncio",
-]
-
 [project]
+name = "asyncio_for_ynab"
+version = "1.87.0"
+description = "Unofficial asyncio client for the YNAB API."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Max R", email = "mxr@users.noreply.github.com" }]
+keywords = ["asyncio", "budget", "httpx", "openapi", "ynab"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -24,17 +19,22 @@ dependencies = [
   "python-dateutil>=2.8.2",
   "typing-extensions>=4.7.1",
 ]
-description = "Unofficial asyncio client for the YNAB API."
-keywords = ["ynab", "budget", "asyncio", "openapi", "httpx"]
-license = "MIT"
-license-files = ["LICENSE"]
-name = "asyncio_for_ynab"
-readme = "README.md"
-requires-python = ">=3.11"
-version = "1.87.0"
 
 [project.urls]
 Homepage = "https://github.com/mxr/asyncio-for-ynab"
+
+[dependency-groups]
+dev = [
+  "aioresponses",
+  "covdefaults>=2.1.0",
+  "coverage",
+  "pytest",
+  "pytest-asyncio",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
@@ -84,6 +84,10 @@ asyncio_for_ynab = ["py.typed"]
 
 [tool.setuptools.packages]
 find = {}
+
+[tool.tombi]
+offline = true
+string-quote-style = "double"
 
 [tool.tox]
 env_list = ["py311", "py312", "py313", "py314", "pre-commit"]
