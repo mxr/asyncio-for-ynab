@@ -70,21 +70,11 @@ jobs:
         trap - EXIT
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
-    - name: Validate OpenAPI spec
-      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
-      with:
-        args: validate -i config/spec.yaml
-
     - name: Generate async YNAB SDK
-      uses: docker://openapitools/openapi-generator-cli:v7.25.0@sha256:2ab0a9680222de65dc9d3baf861aa02b99e1b80c211d8221ebf3ae8f8a102524
-      with:
-        args: generate -i config/spec.yaml -g python -c config/openapi.yaml -t templates/python -o . --minimal-update
+      uses: ./.github/actions/generate-sdk  # zizmor: ignore[self-repository] actionlint rejects $/
 
     - name: Check for changes
       run: |
-        # docker steps run as root, so reclaim generated files for later git operations
-        sudo chown -R "$(id -u):$(id -g)" .
-
         if [ -z "$(git status --porcelain)" ]; then
           echo "Generated SDK is already current."
           echo "CHANGED=false" >> "$GITHUB_ENV"
