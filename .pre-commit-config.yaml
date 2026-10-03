@@ -5,7 +5,6 @@ exclude: |
   (?x)^(
       asyncio_for_ynab/.+|
       docs/.+|
-      pyproject\.toml|
       test/.+
   )$
 
