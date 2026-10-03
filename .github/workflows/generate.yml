@@ -2,12 +2,6 @@ name: generate
 
 on:
   pull_request:
-    paths:
-    - .github/actions/generate-sdk/**
-    - .github/workflows/generate.yml
-    - .openapi-generator-ignore
-    - config/**
-    - templates/**
 
 permissions: {}
 
@@ -16,9 +10,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  generate:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      generator_files: ${{ steps.filter.outputs.generator_files }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d   # v4.0.3
+      id: filter
+      with:
+        filters: |
+          generator_files:
+            - .github/actions/generate-sdk/**
+            - .github/workflows/generate.yml
+            - .openapi-generator-ignore
+            - config/**
+            - templates/**
+  generate-real:
+    needs: [changes]
     # pushing the generated SDK back needs the branch to be in this repo
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: needs.changes.outputs.generator_files == 'true' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -47,3 +60,18 @@ jobs:
         git add --all
         git commit --message 'Generate YNAB SDK with openapi generator'
         git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$HEAD_REF"
+  generate:
+    needs: [changes, generate-real]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+    - env:
+        CHANGES_RESULT: ${{ needs.changes.result }}
+        GENERATE_REAL_RESULT: ${{ needs.generate-real.result }}
+      run: |
+        if [ "$CHANGES_RESULT" != "success" ]; then
+          exit 1
+        fi
+        if [ "$GENERATE_REAL_RESULT" = "failure" ] || [ "$GENERATE_REAL_RESULT" = "cancelled" ]; then
+          exit 1
+        fi
