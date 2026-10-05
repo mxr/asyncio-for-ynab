@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   changes:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       generator_files: ${{ steps.filter.outputs.generator_files }}
     steps:
@@ -32,7 +32,7 @@ jobs:
     needs: [changes]
     # pushing the generated SDK back needs the branch to be in this repo
     if: needs.changes.outputs.generator_files == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -63,7 +63,7 @@ jobs:
   generate:
     needs: [changes, generate-real]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
     - env:
         CHANGES_RESULT: ${{ needs.changes.result }}
