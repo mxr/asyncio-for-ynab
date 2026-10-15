@@ -87,6 +87,31 @@ class ExistingCategory(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if name (nullable) is None
+        # and model_fields_set contains the field
+        if self.name is None and "name" in self.model_fields_set:
+            _dict['name'] = None
+
+        # set to None if note (nullable) is None
+        # and model_fields_set contains the field
+        if self.note is None and "note" in self.model_fields_set:
+            _dict['note'] = None
+
+        # set to None if goal_target (nullable) is None
+        # and model_fields_set contains the field
+        if self.goal_target is None and "goal_target" in self.model_fields_set:
+            _dict['goal_target'] = None
+
+        # set to None if goal_target_date (nullable) is None
+        # and model_fields_set contains the field
+        if self.goal_target_date is None and "goal_target_date" in self.model_fields_set:
+            _dict['goal_target_date'] = None
+
+        # set to None if goal_needs_whole_amount (nullable) is None
+        # and model_fields_set contains the field
+        if self.goal_needs_whole_amount is None and "goal_needs_whole_amount" in self.model_fields_set:
+            _dict['goal_needs_whole_amount'] = None
+
         return _dict
 
     @classmethod

@@ -81,6 +81,41 @@ class MoneyMovement(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if month (nullable) is None
+        # and model_fields_set contains the field
+        if self.month is None and "month" in self.model_fields_set:
+            _dict['month'] = None
+
+        # set to None if moved_at (nullable) is None
+        # and model_fields_set contains the field
+        if self.moved_at is None and "moved_at" in self.model_fields_set:
+            _dict['moved_at'] = None
+
+        # set to None if note (nullable) is None
+        # and model_fields_set contains the field
+        if self.note is None and "note" in self.model_fields_set:
+            _dict['note'] = None
+
+        # set to None if money_movement_group_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.money_movement_group_id is None and "money_movement_group_id" in self.model_fields_set:
+            _dict['money_movement_group_id'] = None
+
+        # set to None if performed_by_user_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.performed_by_user_id is None and "performed_by_user_id" in self.model_fields_set:
+            _dict['performed_by_user_id'] = None
+
+        # set to None if from_category_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.from_category_id is None and "from_category_id" in self.model_fields_set:
+            _dict['from_category_id'] = None
+
+        # set to None if to_category_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.to_category_id is None and "to_category_id" in self.model_fields_set:
+            _dict['to_category_id'] = None
+
         return _dict
 
     @classmethod
