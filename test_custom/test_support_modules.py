@@ -237,6 +237,25 @@ def test_parameters_to_url_query_collection_formats(
     assert api_client.parameters_to_url_query({"n": 1}, None) == "n=1"
 
 
+@pytest.mark.parametrize(
+    ("obj", "expected"),
+    [
+        pytest.param(
+            {"a": 1, "b": ["x", "y"], "c": None},
+            [("a", 1), ("b", "x"), ("b", "y")],
+            id="dict",
+        ),
+        pytest.param({"b": ("x", None)}, [("b", "x")], id="tuple-skips-none"),
+        pytest.param(dt.date(2024, 1, 2), [("name", "2024-01-02")], id="scalar"),
+        pytest.param(None, [], id="none"),
+    ],
+)
+def test_explode_query_object(
+    api_client: ApiClient, obj: object, expected: list[tuple[str, object]]
+) -> None:
+    assert api_client.explode_query_object("name", obj) == expected
+
+
 def test_files_parameters_accept_supported_shapes(
     api_client: ApiClient, tmp_path: Path
 ) -> None:
