@@ -85,6 +85,16 @@ class MonthSummary(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if note (nullable) is None
+        # and model_fields_set contains the field
+        if self.note is None and "note" in self.model_fields_set:
+            _dict['note'] = None
+
+        # set to None if age_of_money (nullable) is None
+        # and model_fields_set contains the field
+        if self.age_of_money is None and "age_of_money" in self.model_fields_set:
+            _dict['age_of_money'] = None
+
         return _dict
 
     @classmethod

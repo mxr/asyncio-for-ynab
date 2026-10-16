@@ -81,6 +81,36 @@ class ScheduledSubTransaction(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
+        # set to None if memo (nullable) is None
+        # and model_fields_set contains the field
+        if self.memo is None and "memo" in self.model_fields_set:
+            _dict['memo'] = None
+
+        # set to None if payee_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.payee_id is None and "payee_id" in self.model_fields_set:
+            _dict['payee_id'] = None
+
+        # set to None if payee_name (nullable) is None
+        # and model_fields_set contains the field
+        if self.payee_name is None and "payee_name" in self.model_fields_set:
+            _dict['payee_name'] = None
+
+        # set to None if category_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.category_id is None and "category_id" in self.model_fields_set:
+            _dict['category_id'] = None
+
+        # set to None if category_name (nullable) is None
+        # and model_fields_set contains the field
+        if self.category_name is None and "category_name" in self.model_fields_set:
+            _dict['category_name'] = None
+
+        # set to None if transfer_account_id (nullable) is None
+        # and model_fields_set contains the field
+        if self.transfer_account_id is None and "transfer_account_id" in self.model_fields_set:
+            _dict['transfer_account_id'] = None
+
         return _dict
 
     @classmethod
