@@ -118,11 +118,19 @@ jobs:
 
     - name: Create pull request
       if: env.CHANGED == 'true'
-      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1   # v8.1.1
       env:
+        GH_TOKEN: ${{ github.token }}
         SPEC_TITLE: ${{ env.SPEC_TITLE }}
-      with:
-        branch: update-ynab-spec
-        title: ${{ env.SPEC_TITLE }}
-        commit-message: ${{ env.SPEC_TITLE }}
-        body: ''
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git switch --force-create update-ynab-spec
+        git add --all
+        git commit --message "$SPEC_TITLE"
+        git push --force "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:update-ynab-spec
+
+        if [ "$(gh pr view update-ynab-spec --json state --jq .state)" = OPEN ]; then
+          gh pr edit update-ynab-spec --title "$SPEC_TITLE"
+        else
+          gh pr create --head update-ynab-spec --title "$SPEC_TITLE" --body ''
+        fi
