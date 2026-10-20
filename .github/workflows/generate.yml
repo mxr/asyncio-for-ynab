@@ -57,8 +57,15 @@ jobs:
 
         git config user.name 'github-actions[bot]'
         git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-        git add --all
+        git add -- .openapi-generator asyncio_for_ynab docs pyproject.toml test
         git commit --message 'Generate YNAB SDK with openapi generator'
+
+        if [ -n "$(git status --porcelain)" ]; then
+          echo 'unexpected changes outside generated paths:' >&2
+          git status --porcelain >&2
+          exit 1
+        fi
+
         git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:$HEAD_REF"
   generate:
     needs: [changes, generate-real]
