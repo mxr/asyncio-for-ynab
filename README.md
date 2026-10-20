@@ -23,10 +23,10 @@ python -m pip install -e ".[dev]"
 ```python
 import asyncio
 
-from asyncio_for_ynab import ApiClient
-from asyncio_for_ynab import Configuration
-from asyncio_for_ynab import PlansApi
-from asyncio_for_ynab import UserApi
+from asyncio_for_ynab.api.plans_api import PlansApi
+from asyncio_for_ynab.api.user_api import UserApi
+from asyncio_for_ynab.api_client import ApiClient
+from asyncio_for_ynab.configuration import Configuration
 
 
 async def main() -> None:
