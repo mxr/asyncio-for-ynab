@@ -43,7 +43,7 @@ jobs:
         persist-credentials: false
 
     - name: Generate async YNAB SDK
-      uses: ./.github/actions/generate-sdk  # zizmor: ignore[self-repository] actionlint rejects $/
+      uses: $/.github/actions/generate-sdk
 
     - name: Commit generated SDK
       env:
