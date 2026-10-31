@@ -71,7 +71,7 @@ jobs:
         echo "SPEC_VERSION=$version" >> "$GITHUB_ENV"
 
     - name: Generate async YNAB SDK
-      uses: ./.github/actions/generate-sdk  # zizmor: ignore[self-repository] actionlint rejects $/
+      uses: $/.github/actions/generate-sdk
 
     - name: Check for changes
       run: |
