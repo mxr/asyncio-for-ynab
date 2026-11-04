@@ -5,7 +5,7 @@ info:
     Our API uses a REST based design, leverages the JSON data format, and relies upon HTTPS for transport. We respond with meaningful HTTP response codes and if an error occurs, we include error details in the response body.
 
     Read the [API Documentation](https://api.ynab.com) for more information about the API, including how to obtain an access token and how to use it to make requests.
-  version: 1.88.0
+  version: 1.89.0
 servers:
   - url: https://api.ynab.com/v1
 security:
@@ -1988,7 +1988,7 @@ components:
             accounts:
               type: array
               items:
-                $ref: "#/components/schemas/AccountBase"
+                $ref: "#/components/schemas/Account"
             payees:
               type: array
               items:
@@ -2020,11 +2020,11 @@ components:
             scheduled_transactions:
               type: array
               items:
-                $ref: "#/components/schemas/ScheduledTransactionSummaryBase"
+                $ref: "#/components/schemas/ScheduledTransactionDetail"
             scheduled_subtransactions:
               type: array
               items:
-                $ref: "#/components/schemas/ScheduledSubTransactionBase"
+                $ref: "#/components/schemas/ScheduledSubTransaction"
     PlanSettingsResponse:
       required:
         - data
