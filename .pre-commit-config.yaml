@@ -44,8 +44,8 @@ repos:
     - coverage
     - httpx>=0.28.1
     - pydantic>=2.11
-    - pytest
-    - pytest-asyncio
+    - pytest-asyncio>=1.4.1
+    - pytest>=9.2.0
     - types-python-dateutil
     - types-setuptools
     - typing-extensions>=4.7.1
@@ -58,8 +58,8 @@ repos:
     - coverage
     - httpx>=0.28.1
     - pydantic>=2.11
-    - pytest
-    - pytest-asyncio
+    - pytest-asyncio>=1.4.1
+    - pytest>=9.2.0
     - types-python-dateutil
     - types-setuptools
     - typing-extensions>=4.7.1
@@ -76,8 +76,8 @@ repos:
     - coverage
     - httpx>=0.28.1
     - pydantic>=2.11
-    - pytest
-    - pytest-asyncio
+    - pytest-asyncio>=1.4.1
+    - pytest>=9.2.0
     - types-python-dateutil
     - types-setuptools
     - typing-extensions>=4.7.1
