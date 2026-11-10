@@ -5,7 +5,7 @@ info:
     Our API uses a REST based design, leverages the JSON data format, and relies upon HTTPS for transport. We respond with meaningful HTTP response codes and if an error occurs, we include error details in the response body.
 
     Read the [API Documentation](https://api.ynab.com) for more information about the API, including how to obtain an access token and how to use it to make requests.
-  version: 1.89.0
+  version: 1.90.0
 servers:
   - url: https://api.ynab.com/v1
 security:
@@ -3265,7 +3265,10 @@ components:
             will be created for the category with this target amount.  If goal_type is
             not specified, it will default to 'NEED', or to 'MF' for Credit Card Payment categories and
             'DEBT' for categories paired to a loan account.
-            When updating a category, passing null removes any existing target.
+            Must not be negative.
+            When updating a category, passing null removes any existing target. Passing 0 does too, except for a
+            Credit Card Payment category's 'TBD' (Pay Off Balance by Date) target, where 0 is a valid amount
+            because the card's balance sets it. Use null to remove that target.
           format: int64
         goal_target_date:
           type:
