@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import inspect
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
@@ -8,6 +9,7 @@ from typing import ClassVar
 
 import pytest
 
+from asyncio_for_ynab.api_client import ApiClient
 from asyncio_for_ynab.api_response import ApiResponse
 from test_custom import GeneratedApiClass
 from test_custom import iter_api_classes
@@ -28,6 +30,9 @@ class FakeResponse:
 
 
 class FakeApiClient:
+    _merge_headers = ApiClient._merge_headers
+    _set_header = staticmethod(ApiClient._set_header)
+
     def __init__(
         self, *, default_content_type: str | None = "application/json"
     ) -> None:
@@ -103,6 +108,14 @@ def _method_arguments(
     return arguments
 
 
+def _expect_deprecation(
+    method_name: str,
+) -> contextlib.AbstractContextManager[object]:
+    if method_name.startswith("import_transactions"):
+        return pytest.deprecated_call(match="transactions/import is deprecated")
+    return contextlib.nullcontext()
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("api_class", iter_api_classes(), ids=lambda cls: cls.__name__)
 async def test_generated_api_methods_serialize_and_call(
@@ -119,17 +132,22 @@ async def test_generated_api_methods_serialize_and_call(
         with subtests.test(
             "all arguments", api=api_class.__name__, method=method.__name__
         ):
-            result = await method(**_method_arguments(method))
+            with _expect_deprecation(method.__name__):
+                result = await method(**_method_arguments(method))
             assert result
         with subtests.test(
             "required arguments", api=api_class.__name__, method=method.__name__
         ):
-            result = await method(**_method_arguments(method, include_optional=False))
+            with _expect_deprecation(method.__name__):
+                result = await method(
+                    **_method_arguments(method, include_optional=False)
+                )
             assert result
         with subtests.test(
             "private arguments", api=api_class.__name__, method=method.__name__
         ):
-            result = await method(**_method_arguments(method, include_private=True))
+            with _expect_deprecation(method.__name__):
+                result = await method(**_method_arguments(method, include_private=True))
             assert result
 
     if api_class.__name__ == "TransactionsApi":

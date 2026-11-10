@@ -99,6 +99,10 @@ async def test_api_client_defaults_headers_and_context_manager(
         close.assert_awaited_once()
     assert client.default_headers["X-Token"] == "value"
     assert client.default_headers["X-Other"] == "other"
+    assert client.user_agent == "custom-agent"
+    del client.default_headers["User-Agent"]
+    with pytest.raises(KeyError):
+        client.user_agent  # noqa: B018
 
 
 def test_api_client_default_singleton(configuration: Configuration) -> None:
@@ -374,7 +378,7 @@ def test_update_params_for_auth_variants(
 def test_update_params_for_auth_appends_and_quotes_cookie_values(
     api_client: ApiClient,
 ) -> None:
-    headers: dict[str, str] = {}
+    headers: dict[str, str] = {"Accept": "application/json", "cookie": "pre=1"}
     queries: list[tuple[str, str]] = []
     api_client.update_params_for_auth(
         headers,
@@ -399,7 +403,10 @@ def test_update_params_for_auth_appends_and_quotes_cookie_values(
             "value": '"already-quoted"',
         },
     )
-    assert headers["Cookie"] == "sid=abc; csrf=%22already-quoted%22"
+    assert headers == {
+        "Accept": "application/json",
+        "Cookie": "pre=1; sid=abc; csrf=%22already-quoted%22",
+    }
 
 
 def test_update_params_for_auth_rejects_unsupported_location(
