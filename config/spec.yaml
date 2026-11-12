@@ -5,7 +5,7 @@ info:
     Our API uses a REST based design, leverages the JSON data format, and relies upon HTTPS for transport. We respond with meaningful HTTP response codes and if an error occurs, we include error details in the response body.
 
     Read the [API Documentation](https://api.ynab.com) for more information about the API, including how to obtain an access token and how to use it to make requests.
-  version: 1.90.0
+  version: 1.91.0
 servers:
   - url: https://api.ynab.com/v1
 security:
@@ -3275,7 +3275,8 @@ components:
             - string
             - "null"
           description: The goal target date in ISO format (e.g. 2016-12-01). Not supported for categories
-            paired to a loan account.
+            paired to a loan account. When combined with a goal_frequency of 'monthly' or 'yearly', this is the
+            date the recurring target is next due. Required for yearly targets, so it cannot be removed from one.
           format: date
         goal_needs_whole_amount:
           type:
@@ -3292,8 +3293,10 @@ components:
             - weekly
             - yearly
           description: When specified, configures a recurring 'NEED' target of goal_target that repeats at this
-            frequency, replacing any existing target. Requires goal_target. Cannot be combined with goal_target_date
-            and is not supported for Credit Card Payment categories or categories paired to a loan account.
+            frequency, replacing any existing target. Requires goal_target. 'yearly' also requires goal_target_date,
+            the date the target is next due. 'monthly' accepts an optional goal_target_date, and 'weekly' cannot be
+            combined with goal_target_date. Not supported for Credit Card Payment categories or categories paired to
+            a loan account.
             Omit to leave an existing target's cadence unchanged.
     ExistingCategory:
       allOf:
